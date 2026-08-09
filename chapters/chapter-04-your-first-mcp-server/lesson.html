@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your First MCP Server — MCP for Everyone</title>
+<meta name="description" content="Build, run, and test a real MCP server exposing tools and a resource with the Python SDK.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-04">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../../index.html">&larr; Back to all chapters</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 4</span>
+    <span class="badge-difficulty">Intermediate</span>
+    <span class="reading-time">~35 min + hands-on lab</span>
+  </div>
+
+  <h1>Your First MCP Server</h1>
+  <p class="lede">
+    You'll build a real MCP server in about thirty lines of Python, connect
+    a client to it, watch it fail on purpose, and fix it — using the
+    current MCP specification (2026-07-28) and the official Python SDK.
+  </p>
+
+  <nav class="page-toc" aria-label="On this page">
+    <span class="toc-label">On this page</span>
+    <a href="#hook">1. The problem: an assistant that can't act</a>
+    <a href="#core-concepts">2. Tools, resources, and the server object</a>
+    <a href="#internals">3. What happens when a tool is called</a>
+    <a href="#build">4. Build: a notes server</a>
+    <a href="#failure-lab">5. Failure lab: break the schema</a>
+    <a href="#production">6. Production scenario: a banking runbook tool</a>
+    <a href="#tradeoffs">7. Trade-offs and common mistakes</a>
+    <a href="#security">8. Security considerations</a>
+    <a href="#performance">9. Performance, cost, and scale</a>
+    <a href="#thought-process">10. Builder thought process</a>
+    <a href="#recap">11. Points to remember</a>
+    <a href="#cheat-sheet">12. Cheat sheet</a>
+  </nav>
+
+  <div class="hook" id="hook">
+    <p>
+      Say you've wired an LLM into a support tool. It can read a ticket and
+      write a beautifully reasoned response. But it can't actually
+      <em>look up the customer's account</em>, <em>check the order status</em>,
+      or <em>save a note</em> to the case file — because none of that is
+      text the model was trained on. It's live data behind an API, and
+      right now, the model has no way to reach it.
+    </p>
+    <p>
+      The obvious fix is to write a Python function, hand it to the model
+      as a "tool," and let the model call it. That works — for one tool,
+      in one codebase, talking to one model provider. The moment you have
+      five tools, two model providers, and three different applications
+      that all want the same tools, you're rewriting the same glue code
+      over and over, with a slightly different shape every time.
+    </p>
+    <p>
+      MCP exists to make that glue code a <strong>protocol</strong> instead
+      of a bespoke integration: write the tool once, as an MCP server, and
+      any MCP-speaking client — Claude Desktop, Claude Code, your own
+      agent — can discover and call it the same way. This chapter builds
+      one from scratch.
+    </p>
+  </div>
+
+  <section id="core-concepts" class="subtopic">
+    <h2>Tools, Resources, and the Server Object</h2>
+    <p>
+      An MCP server exposes up to three kinds of things to a client:
+    </p>
+    <div class="what-is">
+      <span class="label">What is... a Tool?</span>
+      A function the model can <strong>call</strong> to do something or
+      produce a side effect — save a note, send a message, run a query.
+      Think of it like a POST endpoint.
+    </div>
+    <div class="what-is">
+      <span class="label">What is... a Resource?</span>
+      Data the client can <strong>read</strong> and load into the model's
+      context — a file, a database row, a note. Think of it like a GET
+      endpoint. Resources are addressed by URI (for example
+      <code>note://todo</code>).
+    </div>
+    <div class="what-is">
+      <span class="label">What is... a Prompt?</span>
+      A reusable interaction template the host can surface to a user —
+      "summarize this," "review this PR." Prompts are covered fully in
+      Chapter 5; this chapter focuses on tools and a resource, the two
+      primitives you'll reach for most often.
+    </div>
+    <p>
+      In the Python SDK (v2, matching the 2026-07-28 specification), all
+      three are declared on one server object using decorators. The SDK
+      reads your function's type hints and docstring and turns them into
+      the JSON Schema the protocol requires — you never hand-write schema.
+    </p>
+  </section>
+
+  <section id="internals" class="subtopic">
+    <h2>What Happens When a Tool Is Called</h2>
+    <p>
+      It helps to see the wire traffic once before writing code, so the
+      code isn't magic. Under the 2026-07-28 spec, every request is
+      self-contained — there's no connection-scoped session to set up
+      first, unlike older MCP servers you may encounter (see the callout
+      below).
+    </p>
+    <figure class="diagram-figure">
+      <pre><code>Client                                   Server
+  |                                          |
+  |--- tools/list -------------------------->|
+  |<-- {"tools": [{"name": "save_note", ...}]}|
+  |                                          |
+  |--- tools/call {"name": "save_note",      |
+  |     "arguments": {"title": "todo",       |
+  |                    "body": "buy milk"}} ->|
+  |                                          |  (runs save_note() in Python)
+  |<-- {"content": [{"type": "text",         |
+  |      "text": "Saved note 'todo'..."}]}   |
+  |                                          |</code></pre>
+      <figcaption>Two independent request/response exchanges — discovery,
+      then invocation. Nothing is held open between them.</figcaption>
+    </figure>
+    <div class="what-is">
+      <span class="label">Spec note: stateful servers you'll still see</span>
+      Most MCP servers deployed before mid-2026 speak the prior stable
+      spec (2025-11-25), which opens a session with an
+      <code>initialize</code> handshake before any tool call. If you
+      connect to an older server and your client hangs waiting for a
+      response that never comes, missing the handshake is the first thing
+      to check — Chapter 6 covers this compatibility story in full.
+    </div>
+  </section>
+
+  <section id="build" class="subtopic">
+    <h2>Build: A Notes Server</h2>
+    <p>
+      Here's a complete, runnable MCP server: two tools and one resource,
+      backed by an in-memory dictionary. This exact code was run against
+      the official SDK (<code>mcp</code> v2.0.0) while writing this
+      chapter — the output further down is real, not illustrative.
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">notes_server.py</span>
+      </div>
+      <pre><code>from mcp.server import MCPServer
+
+mcp = MCPServer("notes")
+
+_NOTES: dict[str, str] = {}
+
+
+@mcp.tool()
+def save_note(title: str, body: str) -> str:
+    """Save a note under a title. Overwrites any existing note with the same title."""
+    _NOTES[title] = body
+    return f"Saved note '{title}' ({len(body)} characters)."
+
+
+@mcp.tool()
+def list_notes() -> list[str]:
+    """List the titles of every saved note."""
+    return list(_NOTES.keys())
+
+
+@mcp.resource("note://{title}")
+def read_note(title: str) -> str:
+    """Read the full body of a saved note by title."""
+    if title not in _NOTES:
+        raise ValueError(f"No note titled '{title}'")
+    return _NOTES[title]
+
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")</code></pre>
+    </div>
+    <p>
+      Notice what you <em>didn't</em> write: no JSON Schema, no
+      request-parsing boilerplate, no manual error envelope. The
+      docstring became the tool's description; the type hints became its
+      input/output schema. That's the SDK's whole value proposition —
+      "you wrote two Python functions with type hints and a docstring,
+      the SDK does the rest."
+    </p>
+    <p>
+      Install and run it:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">terminal</span>
+      </div>
+      <pre><code>pip install "mcp[cli]"          # requires Python 3.10+
+uv run mcp dev notes_server.py  # opens the MCP Inspector UI</code></pre>
+    </div>
+    <p>
+      To connect a client programmatically instead of using the Inspector
+      — this is what a host application actually does — the SDK ships an
+      in-memory <code>Client</code> for exactly this purpose:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">test_notes_server.py</span>
+      </div>
+      <pre><code>import asyncio
+from mcp import Client
+from notes_server import mcp
+
+
+async def main() -> None:
+    async with Client(mcp) as client:
+        tools = await client.list_tools()
+        print("TOOLS:", [t.name for t in tools.tools])
+
+        save_result = await client.call_tool(
+            "save_note", {"title": "todo", "body": "buy milk"}
+        )
+        print("SAVE RESULT:", save_result.content[0].text)
+
+        listed = await client.call_tool("list_notes", {})
+        print("LIST RESULT:", listed.structured_content)
+
+        resource = await client.read_resource("note://todo")
+        print("RESOURCE:", resource.contents[0].text)
+
+
+asyncio.run(main())</code></pre>
+    </div>
+    <p>Running it produces:</p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">output</span>
+      </div>
+      <pre><code>TOOLS: ['save_note', 'list_notes']
+SAVE RESULT: Saved note 'todo' (8 characters).
+LIST RESULT: {'result': ['todo']}
+RESOURCE: buy milk</code></pre>
+    </div>
+    <p>
+      Take a moment to connect this back to the wire diagram above:
+      <code>client.list_tools()</code> is the <code>tools/list</code>
+      exchange; <code>client.call_tool()</code> is <code>tools/call</code>.
+      The SDK is hiding JSON-RPC from you, but it's the same protocol
+      traffic either way.
+    </p>
+  </section>
+
+  <section id="failure-lab" class="subtopic">
+    <h2>Failure Lab: Break the Schema</h2>
+    <p>
+      Now break it on purpose. Change <code>save_note</code>'s signature to
+      drop the type hint on <code>body</code>:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">notes_server.py (broken)</span>
+      </div>
+      <pre><code>@mcp.tool()
+def save_note(title: str, body) -> str:   # body has no type hint
+    """Save a note under a title."""
+    _NOTES[title] = body
+    return f"Saved note '{title}'."</code></pre>
+    </div>
+    <p>
+      Re-run <code>test_notes_server.py</code>. The server still starts —
+      that's the trap. The SDK falls back to an untyped schema for
+      <code>body</code>, so the tool <em>looks</em> valid to
+      <code>tools/list</code>, but any client or host that validates
+      arguments strictly (many do, for safety) will now accept anything —
+      a list, a dict, <code>None</code> — where a string was intended.
+    </p>
+    <div class="what-is">
+      <span class="label">Debugging exercise</span>
+      Call <code>save_note</code> with <code>{"title": "x", "body": 42}</code>
+      instead of a string. It succeeds silently and stores the integer.
+      Now imagine <code>body</code> was meant to be sanitized HTML, or a
+      SQL fragment. This is exactly how a missing type hint becomes a
+      real production bug three weeks later, in a code path nobody is
+      looking at. Fix: always annotate every tool parameter, and add an
+      integration test that calls each tool with a wrong-typed argument
+      and asserts it's rejected.
+    </div>
+  </section>
+
+  <section id="production" class="subtopic">
+    <h2>Production Scenario: A Banking Runbook Tool</h2>
+    <p>
+      A regional bank's platform team wants an internal assistant that can
+      look up an incident runbook by ID during an outage. The naive first
+      version is a single tool:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">runbook_server.py (naive)</span>
+      </div>
+      <pre><code>@mcp.tool()
+def get_runbook(runbook_id: str) -> str:
+    """Fetch a runbook's full contents by ID."""
+    return db.fetch_runbook(runbook_id)   # no auth, no audit trail</code></pre>
+    </div>
+    <p>
+      This ships, works in the demo, and then fails a security review:
+      any client that can reach this server can read <em>any</em> runbook,
+      including ones for systems the requesting team has no business
+      touching — and there's no record of who asked for what. The fix
+      isn't more code inside the tool function; it's recognizing that
+      "who is calling this server, and what are they allowed to see" is a
+      host/transport-level concern (Chapter 9), not something you bolt
+      onto each tool individually. The lesson for this chapter: a tool
+      that "works" is not the same as a tool that's ready to expose beyond
+      your own laptop.
+    </p>
+  </section>
+
+  <section id="tradeoffs" class="subtopic">
+    <h2>Trade-Offs and Common Mistakes</h2>
+    <table class="compare-table">
+      <thead><tr><th>Choice</th><th>When it fits</th><th>When it doesn't</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>One tool per action (<code>save_note</code>, <code>list_notes</code>)</td>
+          <td>Most cases — the model reasons better over small, clearly-named tools.</td>
+          <td>You have 200 near-identical CRUD endpoints — consider one parameterized tool with an <code>action</code> field instead, or you'll blow the model's tool-list context budget.</td>
+        </tr>
+        <tr>
+          <td>Resource for read access (<code>note://{title}</code>)</td>
+          <td>Data the model should be able to load into context without "deciding" to call a tool.</td>
+          <td>The read has side effects (increments a counter, triggers a webhook) — that's a tool, not a resource, regardless of how "read-like" it feels.</td>
+        </tr>
+        <tr>
+          <td>In-memory storage (this chapter's example)</td>
+          <td>Learning, prototyping, single-process demos.</td>
+          <td>Anything that needs to survive a restart or be shared across server instances — swap in a real datastore before this leaves your laptop.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>Common mistakes at this stage:</strong></p>
+    <ul>
+      <li>Skipping type hints "to move fast" — see the Failure Lab above.</li>
+      <li>Writing a docstring that describes <em>what</em> the function does internally instead of <em>when a model should call it</em> — the docstring is the only signal the model has for tool selection.</li>
+      <li>Returning raw exceptions instead of raising a clear <code>ValueError</code> with a message the model can act on (compare <code>read_note</code>'s explicit error above).</li>
+      <li>Treating "it started without errors" as "it's correct" — a server with a bad schema starts fine; only a client-side test catches it.</li>
+    </ul>
+  </section>
+
+  <section id="security" class="subtopic">
+    <h2>Security Considerations</h2>
+    <p>
+      This one server is low-risk — it's local, in-memory, and has no
+      network reach. But the shape of the risk you'll meet at scale is
+      already visible: <code>save_note</code> accepts arbitrary text as
+      <code>body</code>. If a future version of this server rendered notes
+      as HTML in a web UI, or fed them back into a model's context
+      unescaped, that arbitrary text becomes an injection vector. Treat
+      every tool argument as untrusted input the moment the server leaves
+      your laptop — full threat modeling is Chapters 9–10.
+    </p>
+  </section>
+
+  <section id="performance" class="subtopic">
+    <h2>Performance, Cost, and Scale</h2>
+    <p>
+      At this scale (one process, one user, in-memory dict), performance
+      and cost are non-issues — that's the point of building the simplest
+      version first. Two things to keep in mind as this grows: (1) every
+      tool you add increases the size of the tool catalog sent to the
+      model on <code>tools/list</code>, which costs context tokens on
+      every turn — don't expose tools "just in case." (2) stdio transport
+      (used here) means one server process per client connection; it
+      won't survive being shared across 100 concurrent users — that's
+      what Streamable HTTP is for (Chapter 6).
+    </p>
+  </section>
+
+  <section id="thought-process" class="subtopic">
+    <h2>Builder Thought Process</h2>
+    <div class="thinking-box">
+      <p><strong>Problem:</strong> give a model the ability to save and
+      retrieve notes without hand-rolling a JSON-RPC integration.</p>
+      <p><strong>Assumptions:</strong> the SDK's type-hint-to-schema
+      conversion is reliable enough to skip manual schema writing; an
+      in-memory dict is fine for a first pass.</p>
+      <p><strong>Approach considered:</strong> a single <code>notes</code>
+      tool with an <code>action</code> parameter ("save" | "list" | "read")
+      vs. three separate tools. Chose three separate tools — clearer names
+      help the model pick correctly, and the tool count here is small
+      enough that catalog size isn't a concern yet (see Performance
+      above).</p>
+      <p><strong>Validation:</strong> ran the in-memory <code>Client</code>
+      against the server and printed real output at each step, rather
+      than trusting that "no exceptions" meant "correct."</p>
+      <p><strong>Observed failure:</strong> removing a type hint didn't
+      break startup — it silently widened the accepted input, which is
+      worse than a crash because it fails later, elsewhere.</p>
+      <p><strong>Decision:</strong> treat "every tool parameter has a type
+      hint" as a non-negotiable lint rule going forward, not a style
+      preference.</p>
+    </div>
+  </section>
+
+  <section id="recap" class="subtopic">
+    <div class="points-to-remember">
+      <h2>Points To Remember</h2>
+      <ul>
+        <li>An MCP server exposes tools (actions), resources (readable
+        data by URI), and prompts (templates) — this chapter built the
+        first two.</li>
+        <li>The Python SDK turns type hints and docstrings into the
+        protocol's JSON Schema automatically; a missing type hint doesn't
+        crash the server, it silently widens what the tool accepts.</li>
+        <li>Under the 2026-07-28 spec, requests are stateless — no
+        <code>initialize</code> handshake. Older servers (2025-11-25 spec)
+        still expect one; that mismatch is a common first debugging
+        surprise (Chapter 6).</li>
+        <li>"It runs without errors" is not validation — call it through a
+        client and inspect the actual output.</li>
+        <li>A tool that's safe on your laptop is not automatically safe
+        once a server is reachable by others — auth, scoping, and audit
+        trails are separate concerns from the tool function itself
+        (Chapter 9).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="cheat-sheet" class="subtopic">
+    <div class="what-is">
+      <span class="label">Cheat sheet</span>
+      <pre><code>from mcp.server import MCPServer
+mcp = MCPServer("name")
+
+@mcp.tool()
+def fn(arg: str) -> str: ...      # action, has a side effect
+
+@mcp.resource("scheme://{id}")
+def fn(id: str) -> str: ...       # read-only, addressed by URI
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")    # or transport="streamable-http"</code></pre>
+    </div>
+  </section>
+
+  <div class="what-is">
+    <span class="label">Interview questions (4 levels)</span>
+    See <a href="interview-questions.html">Chapter 4 interview questions</a>
+    for beginner, intermediate, senior, and architect-level questions with
+    strong answers, red flags, and follow-ups.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../../index.html">&larr; All Chapters</a>
+    <a href="quiz.html">Take the Quiz &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+    <span><a href="https://github.com/technaom/mcp-for-everyone">github.com/technaom/mcp-for-everyone</a></span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

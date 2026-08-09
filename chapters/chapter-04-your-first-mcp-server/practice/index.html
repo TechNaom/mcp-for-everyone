@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your First MCP Server Practice Bank — MCP for Everyone</title>
+<meta name="description" content="Practice bank for Your First MCP Server.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-04">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../exercises/index.html">&larr; Back to exercises</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 4 Practice Bank</span>
+    <span class="reading-time">~20 min</span>
+  </div>
+  <h1>Practice Bank: Your First MCP Server</h1>
+  <p>Scenario-based questions grounded in real operational, product, and
+  compliance situations — not just "write a tool."</p>
+
+  <nav class="page-toc" aria-label="On this page">
+    <span class="toc-label">On this page</span>
+    <a href="#design">1. Tool design judgment</a>
+    <a href="#operations">2. Operational reasoning</a>
+  </nav>
+
+  <h2 id="design">1. Tool design judgment</h2>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario</span>
+    <h3>The one-tool-does-everything proposal</h3>
+    <p>A teammate proposes replacing your five note-related tools
+    (<code>save_note</code>, <code>list_notes</code>, <code>delete_note</code>,
+    <code>search_notes</code>, <code>note_count</code>) with one tool,
+    <code>notes_action(action: str, **kwargs)</code>, to "keep the catalog
+    small." What do you say?</p>
+    <p><strong>Consider:</strong> catalog size vs. model tool-selection
+    accuracy; what a single loosely-typed <code>kwargs</code> parameter
+    does to schema validation; whether five well-named tools or one vague
+    one is easier for a model to use correctly. There isn't one universal
+    right answer — a defensible response weighs the trade-off explicitly
+    rather than picking a side reflexively.</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario</span>
+    <h3>The compliance ask</h3>
+    <p>Legal asks: "can we prove which notes were read, by whom, and
+    when?" Your current <code>read_note</code> resource has no logging.
+    What has to change, and where does that change belong — inside the
+    resource function, or somewhere else in the stack?</p>
+  </div>
+
+  <h2 id="operations">2. Operational reasoning</h2>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario</span>
+    <h3>The silent failure</h3>
+    <p>A user reports that saving a very long note "does nothing" — no
+    error shown in their chat UI, the note just isn't there afterward.
+    Given that <code>ValueError</code>s from a tool come back as
+    <code>result.is_error = True</code> rather than a raised exception,
+    what's your hypothesis for where in the host/client stack this could
+    be getting swallowed?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario</span>
+    <h3>The restart</h3>
+    <p>Your notes server has been running for three weeks and just got
+    restarted for a routine deploy. Every note is gone. Was this a bug?
+    What would you change about the architecture — and what would you
+    NOT change, because it's out of scope for a "first MCP server"
+    chapter's design?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Cost</span>
+    <h3>The 40-tool catalog</h3>
+    <p>Product wants to merge three internal servers (notes, bookmarks,
+    tasks — 14 tools total) behind one host so users "only connect to one
+    thing." Every one of those 14 tool schemas is sent to the model on
+    every single turn. Estimate, in plain terms, why this is a real
+    recurring cost, not a one-time integration cost, and what you'd
+    measure before approving the merge.</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Support</span>
+    <h3>The support ticket</h3>
+    <p>A user says: "I told the assistant to delete my 'todo' note and it
+    said it worked, but the note is still there." Given
+    <code>delete_note</code> from the exercises, list three different
+    root causes consistent with this symptom — at least one should be a
+    bug in your tool, and at least one should be a problem elsewhere in
+    the host/client stack that your tool can't fix.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../exercises/index.html">&larr; Exercises</a>
+    <a href="../interview-questions.html">Interview Questions &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

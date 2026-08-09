@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your First MCP Server Interview Questions — MCP for Everyone</title>
+<meta name="description" content="Interview questions for Your First MCP Server.">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-04">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="practice/index.html">&larr; Back to practice bank</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 4 Interview Questions</span>
+    <span class="reading-time">~15 min</span>
+  </div>
+  <h1>Interview Questions: Your First MCP Server</h1>
+  <p>Grouped by level. Each includes a strong answer, a red flag, and a follow-up an interviewer might ask next.</p>
+
+  <div class="lesson-card">
+    <h2>1. (Beginner) What's the difference between a tool and a resource in MCP?</h2>
+    <p><strong>Strong answer:</strong> A tool is something the model calls to perform an action or side effect — it's invoked, like a POST. A resource is data the client reads and loads into context — it's addressed by a URI, like a GET. The distinguishing question is "does calling this change anything?" — if yes, it's a tool even if it also returns data.</p>
+    <p><strong>Red flag:</strong> Says "they're basically the same thing" or can't explain why a read with side effects should be a tool, not a resource.</p>
+    <p><strong>Follow-up:</strong> "Where would prompts fit into this picture?"</p>
+    <p><strong>What this proves:</strong> The candidate understands MCP's primitive model, not just "the model can call functions."</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>2. (Beginner) Why does the Python SDK ask for type hints on every tool parameter?</h2>
+    <p><strong>Strong answer:</strong> The SDK generates the tool's JSON Schema from type hints and the docstring, so the client and model know what arguments are valid without you writing schema by hand. Skip a type hint and the parameter falls back to an untyped/loose schema — the server still runs, but validation gets weaker silently.</p>
+    <p><strong>Red flag:</strong> Thinks type hints are "just for readability" and doesn't connect them to schema generation or validation.</p>
+    <p><strong>Follow-up:</strong> "What would you add to a CI pipeline to catch a missing type hint before it ships?"</p>
+    <p><strong>What this proves:</strong> Understands the SDK isn't magic — it's mapping a familiar Python feature onto the protocol's requirements, with real consequences for skipping it.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>3. (Intermediate) Walk me through what happens on the wire when a client calls a tool.</h2>
+    <p><strong>Strong answer:</strong> The client first sends a <code>tools/list</code> request to discover available tools and their schemas; the server responds with the catalog. When the model decides to use one, the client sends a <code>tools/call</code> request with the tool name and arguments as JSON-RPC; the server runs the corresponding Python function and returns its result wrapped in a content response. Under the current (2026-07-28) spec, each of these is a self-contained, stateless request — there's no persistent session to open first.</p>
+    <p><strong>Red flag:</strong> Describes it purely in SDK terms ("you call <code>client.call_tool()</code>") with no idea what's happening underneath, or asserts a session/handshake is always required.</p>
+    <p><strong>Follow-up:</strong> "What would be different if this server were built against the 2025-11-25 spec instead?"</p>
+    <p><strong>What this proves:</strong> Can reason about the protocol independent of the convenience SDK — important once they're debugging a client that isn't behaving.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>4. (Intermediate) A tool "works" in your local test but a code reviewer rejects it. What might they be flagging?</h2>
+    <p><strong>Strong answer:</strong> Several plausible answers, and a strong candidate names more than one: missing/loose type hints that widen accepted input silently; a docstring that describes internals instead of when to call the tool (hurts model tool-selection); raw exceptions instead of clear, actionable errors; no consideration of what happens once this leaves localhost — auth, rate limits, argument sanitization.</p>
+    <p><strong>Red flag:</strong> Can only name one issue, or treats "it ran without an exception" as sufficient proof of correctness.</p>
+    <p><strong>Follow-up:</strong> "How would you write a test that catches the loose-type-hint problem automatically?"</p>
+    <p><strong>What this proves:</strong> Production instinct — the gap between "runs on my machine" and "ready for review."</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>5. (Senior) You're adding a 40th tool to a server and the agent's tool-selection accuracy is dropping. What's going on, and what do you do?</h2>
+    <p><strong>Strong answer:</strong> Every tool in the catalog is sent to the model on every turn (via <code>tools/list</code>), consuming context tokens and competing for the model's attention during tool selection — more tools generally means worse selection accuracy, not just higher cost. Fixes: consolidate near-identical tools behind one parameterized tool with an action field; split the server into multiple purpose-scoped servers the host only connects when relevant; tighten docstrings so each tool's purpose is unambiguous relative to its neighbors.</p>
+    <p><strong>Red flag:</strong> Suggests only "use a smarter model" without addressing the catalog design itself.</p>
+    <p><strong>Follow-up:</strong> "How would you measure whether a catalog restructuring actually improved selection accuracy?"</p>
+    <p><strong>What this proves:</strong> Understands that tool design is a context-engineering problem, not just a coding problem — the kind of judgment that separates "wrote an MCP server" from "operates one at scale."</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>6. (Architect) You inherit a fleet of internal MCP servers, some speaking 2025-11-25 and some speaking 2026-07-28. What's your plan?</h2>
+    <p><strong>Strong answer:</strong> First, inventory: which servers/clients speak which spec version, and which hosts need to talk to both. Because the specs describe a backward-compatibility detection mechanism (clients/servers detect the counterpart's era and fall back), the immediate risk is lower than a hard break — but plan an explicit migration: prioritize high-traffic or externally-facing servers first, put version detection/logging in front of the fleet so you can see the real mix (not guess it), and set a deprecation timeline for the older spec rather than running both indefinitely. Treat this as a versioning and observability problem, not a one-time upgrade script.</p>
+    <p><strong>Red flag:</strong> Proposes "upgrade everything at once" with no phasing, or is unaware that the specs have a defined compatibility/fallback path at all.</p>
+    <p><strong>Follow-up:</strong> "How would you detect, in production, that a client just silently fell back to legacy compatibility mode?"</p>
+    <p><strong>What this proves:</strong> Architect-level thinking: manages risk and observability across a fleet, not just "gets one server working."</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>7. (Senior) Why does an MCP tool's error come back as a flagged result instead of raising an exception on the client?</h2>
+    <p><strong>Strong answer:</strong> A tool call is a remote, cross-process invocation carried over JSON-RPC — a Python exception can't cross that boundary directly. The protocol represents a tool failure as a normal response with an error flag and a message, so any client, in any language, has one consistent way to detect a failed call: check the result, not language-specific exception machinery. It also means "the tool ran and failed" and "the tool couldn't be reached at all" are meaningfully different failure modes, and a caller needs to handle both.</p>
+    <p><strong>Red flag:</strong> Assumes a raised <code>ValueError</code> automatically becomes a client-side Python exception, or has never noticed the distinction.</p>
+    <p><strong>Follow-up:</strong> "How would you make sure your host's agent loop actually surfaces a flagged error to the user, instead of silently treating any 'complete' response as success?"</p>
+    <p><strong>What this proves:</strong> Understands MCP as a real cross-process protocol, not just a convenient Python API.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>8. (Architect) How would you decide whether a new capability belongs on an existing MCP server or a new one?</h2>
+    <p><strong>Strong answer:</strong> Weigh at least: blast radius (does a bug or compromise in the new capability expose unrelated tools on the same server?), permission boundaries (do the two capabilities need different auth/scopes — if so, that argues strongly for separate servers), tool-catalog size and selection accuracy (bundling too much into one server degrades model tool-selection, as in Q5), and operational ownership (does one team own both capabilities, or does bundling create a shared deploy/on-call surface across teams that shouldn't be coupled). No single factor dominates; a strong answer names the trade-off explicitly rather than defaulting to "always separate" or "always bundle."</p>
+    <p><strong>Red flag:</strong> Gives a one-line rule with no trade-off reasoning, e.g. "always make a new server for each domain" without justification.</p>
+    <p><strong>Follow-up:</strong> "Now that you've split them into two servers, how does a single host present both tool catalogs to the model as one coherent set?"</p>
+    <p><strong>What this proves:</strong> Architect-level judgment: server boundaries are a design decision with real security, performance, and ownership consequences, not just a folder-structure choice.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="practice/index.html">&larr; Practice Bank</a>
+    <a href="project/index.html">Build the Project &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your First MCP Server Exercises — MCP for Everyone</title>
+<meta name="description" content="Hands-on exercises for Your First MCP Server.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-04">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../quiz.html">&larr; Back to the quiz</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 4 Exercises</span>
+    <span class="reading-time">~30 min</span>
+  </div>
+  <h1>Exercises: Your First MCP Server</h1>
+  <p>Extend the notes server from the lesson. Four tasks, two of them production-gear.</p>
+
+  <div class="what-is">
+    <span class="label">How to run these</span>
+    <pre><code>pip install "mcp[cli]"
+cd chapters/chapter-04-your-first-mcp-server/exercises
+python starter.py   # fill in the TODOs first</code></pre>
+    Compare against <code>solution.py</code> once you're done or stuck. The
+    solution was verified end-to-end against the official SDK's in-memory
+    <code>Client</code> — see the lesson's Build section for the test
+    pattern to reuse here.
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">1</span> Delete a note</h3>
+    <p>Add a <code>delete_note(title: str) -> str</code> tool. Raise
+    <code>ValueError</code> if the title doesn't exist — don't fail
+    silently.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">2</span> Search notes</h3>
+    <p>Add a <code>search_notes(query: str) -> list[str]</code> tool that
+    returns titles of notes whose body contains the query, case-insensitive.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">3</span> (Production-gear) Cap the body length</h3>
+    <p><code>save_note</code> currently accepts input of any size. Add a
+    10,000-character limit and raise a clear <code>ValueError</code> if
+    it's exceeded. Then write a quick client call that sends 10,001
+    characters and confirm <code>result.is_error</code> is <code>True</code>
+    — errors from a tool function don't raise a Python exception on the
+    client side, they come back as a flagged result. This matters:
+    calling code that only wraps tool calls in <code>try/except</code>
+    will silently miss these failures.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">4</span> (Production-gear) Tool or resource?</h3>
+    <p>Add a <code>note_count() -> int</code> tool. Before you write it,
+    decide: should this be a tool or a resource? Write a one-sentence
+    justification as a comment. There's a defensible answer either way —
+    the goal is to practice the reasoning, not land on one "correct"
+    answer.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">5</span> (Production-gear) Reject empty titles</h3>
+    <p><code>save_note("", "some body")</code> currently succeeds and
+    creates a note with no name, which is impossible to reference again
+    by title. Add validation that rejects an empty or whitespace-only
+    title with a clear <code>ValueError</code>. Then decide: should
+    <code>delete_note</code> and <code>read_note</code> also validate
+    their <code>title</code> argument, or is it safe to assume it's
+    already valid by the time those run? Justify your answer.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">6</span> Rename a note</h3>
+    <p>Add a <code>rename_note(old_title: str, new_title: str) -> str</code>
+    tool. Decide what should happen if <code>new_title</code> already
+    exists — overwrite silently, or raise an error? Pick one, implement
+    it, and write a one-line comment explaining why you picked it over
+    the alternative.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../quiz.html">&larr; Back to Quiz</a>
+    <a href="../practice/index.html">Practice Bank &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

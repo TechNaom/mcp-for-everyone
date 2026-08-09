@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your First MCP Server Project — MCP for Everyone</title>
+<meta name="description" content="Project for Your First MCP Server: build a bookmarks MCP server.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-04">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../interview-questions.html">&larr; Back to interview questions</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 4 Project</span>
+    <span class="reading-time">~45 min · Level 1, Guided</span>
+  </div>
+  <h1>Build a Bookmarks MCP Server</h1>
+  <p>A portfolio-worthy first project: a server that outlives the chapter's
+  in-memory example by actually persisting data to disk.</p>
+
+  <div class="hook">
+    <p>
+      The lesson's notes server loses everything on restart — fine for
+      learning, not fine for anything real. This project fixes that: build
+      an MCP server that manages bookmarks (URL, title, tags) backed by a
+      JSON file, so your bookmarks survive a restart the way a real tool
+      integration needs to.
+    </p>
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <h2>Build it</h2>
+  <p>
+    Implement <code>add_bookmark</code>, <code>list_bookmarks</code>, and a
+    <code>bookmark://{encoded_url}</code> resource in <code>starter.py</code>.
+    Test with the in-memory <code>Client</code> pattern from the lesson.
+    Watch for the URI-template gotcha called out in the TODOs — a bare URL
+    breaks MCP's own template matching because it contains
+    <code>://</code>; the reference solution shows the percent-encoding
+    fix, confirmed against the real SDK while writing this project.
+  </p>
+
+  <div class="what-is">
+    <span class="label">Verification</span>
+    <pre><code>python -c "
+import asyncio
+from mcp import Client
+from solution import mcp, bookmark_resource_uri
+
+async def main():
+    async with Client(mcp) as client:
+        await client.call_tool('add_bookmark', {
+            'url': 'https://modelcontextprotocol.io',
+            'title': 'MCP Docs',
+            'tags': ['mcp', 'docs'],
+        })
+        print(await client.call_tool('list_bookmarks', {}))
+        r = await client.read_resource(bookmark_resource_uri('https://modelcontextprotocol.io'))
+        print(r.contents[0].text)
+
+asyncio.run(main())
+"</code></pre>
+    Expect the tool list, then <code>MCP Docs — tags: mcp, docs</code>.
+  </div>
+
+  <div class="what-is">
+    <span class="label">Extension challenge</span>
+    Add a <code>remove_bookmark(url: str) -> str</code> tool, and think
+    through (comment, don't necessarily fix) the race condition noted in
+    the solution: what happens if two clients call
+    <code>add_bookmark</code> at nearly the same time against the same
+    JSON file?
+  </div>
+
+  <div class="points-to-remember">
+    <h2>Why this project matters</h2>
+    <p>
+      Every real MCP server eventually has to answer "where does the
+      data actually live, and what happens when the process restarts?"
+      This project makes you answer that question explicitly instead of
+      leaving it implicit — and the URI-encoding bug you'll hit along the
+      way is a genuinely common gotcha, not a contrived teaching example.
+    </p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../interview-questions.html">&larr; Interview Questions</a>
+    <a href="../../../index.html">All Chapters &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>
