@@ -7,16 +7,29 @@ printed output — no guessing, trace what actually came back.
 """
 
 import asyncio
-import sys
+import importlib.util
 from pathlib import Path
 
-# Reuse the Chapter 4 solution server instead of duplicating it.
-sys.path.insert(
-    0, str(Path(__file__).parents[2] / "chapter-04-your-first-mcp-server" / "exercises")
-)
-from solution import mcp  # noqa: E402  (import after sys.path edit, intentional)
-
 from mcp import Client
+
+
+def _load_chapter_4_module():
+    """Load Chapter 4's notes-server solution by explicit file path
+    (avoids a solution.py/solution.py name collision -- see Chapter 3's
+    exercises/solution.py for the full explanation)."""
+    ch4_path = (
+        Path(__file__).parents[2]
+        / "chapter-04-your-first-mcp-server"
+        / "exercises"
+        / "solution.py"
+    )
+    spec = importlib.util.spec_from_file_location("chapter_04_notes", ch4_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+mcp = _load_chapter_4_module().mcp
 
 
 async def main() -> None:

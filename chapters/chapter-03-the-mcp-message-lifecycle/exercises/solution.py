@@ -1,15 +1,35 @@
 """Chapter 3 exercise — reference solution."""
 
 import asyncio
-import sys
+import importlib.util
 from pathlib import Path
 
-sys.path.insert(
-    0, str(Path(__file__).parents[2] / "chapter-04-your-first-mcp-server" / "exercises")
-)
-from solution import mcp  # noqa: E402
-
 from mcp import Client
+
+
+def _load_chapter_4_module():
+    """Load Chapter 4's notes-server solution by explicit file path.
+
+    Both this file and Chapter 4's are named solution.py -- a plain
+    sys.path + `import solution` trick resolves inconsistently depending
+    on how this file itself is invoked (works when run as `python
+    solution.py` directly, breaks under `python -c "import solution"` or
+    when a test runner imports this file by name, due to a circular
+    self-import). Loading by explicit path avoids the collision entirely.
+    """
+    ch4_path = (
+        Path(__file__).parents[2]
+        / "chapter-04-your-first-mcp-server"
+        / "exercises"
+        / "solution.py"
+    )
+    spec = importlib.util.spec_from_file_location("chapter_04_notes", ch4_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+mcp = _load_chapter_4_module().mcp
 
 
 async def main() -> None:

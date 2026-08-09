@@ -3,7 +3,11 @@
   Mirrors the rag-for-everyone / python-for-everyone pattern: sidebar.js
   and home.js render navigation from this file. A chapter is "live" iff
   it has a `path` — omit `path` for chapters that don't exist yet, do not
-  set a placeholder path, or sidebar/home will link to a 404.
+  set a placeholder path, or sidebar/home will link to a 404. The same
+  rule applies to a module's `examPath`: set it to null until that
+  module's written exam actually exists in
+  assessments/written-exams/ -- do not pre-fill a path for an exam that
+  hasn't been written yet.
   Chapters 1-4 have content today — see PROJECT_STATE.md.
 */
 
@@ -71,7 +75,7 @@ window.MFE_MODULES = [
   {
     title: "Module 3 — Building MCP Servers",
     summary: "Hands-on server construction with the Python SDK.",
-    examPath: "assessments/written-exams/module-3-exam.md",
+    examPath: null, /* written when Module 3's chapters are complete */
     chapters: [
       {
         id: "chapter-04",
@@ -107,7 +111,7 @@ window.MFE_MODULES = [
   {
     title: "Module 4 — Building Clients & Hosts",
     summary: "The other half of the wire: connecting an agent to servers.",
-    examPath: "assessments/written-exams/module-4-exam.md",
+    examPath: null, /* written when Module 4's chapters are complete */
     chapters: [
       {
         id: "chapter-07",
@@ -126,7 +130,7 @@ window.MFE_MODULES = [
   {
     title: "Module 5 — Security & Trust Boundaries",
     summary: "MCP-specific security thinking: the course's core differentiator.",
-    examPath: "assessments/written-exams/module-5-exam.md",
+    examPath: null, /* written when Module 5's chapters are complete */
     chapters: [
       {
         id: "chapter-09",
@@ -145,7 +149,7 @@ window.MFE_MODULES = [
   {
     title: "Module 6 — Production MCP",
     summary: "What changes between a demo server and one that survives production.",
-    examPath: "assessments/written-exams/module-6-exam.md",
+    examPath: null, /* written when Module 6's chapters are complete */
     chapters: [
       {
         id: "chapter-11",
