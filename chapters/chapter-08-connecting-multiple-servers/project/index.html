@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connecting Multiple Servers Project — MCP for Everyone</title>
+<meta name="description" content="Project: a two-server CLI host connecting the notes and bookmarks servers.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-08">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../interview-questions.html">&larr; Back to interview questions</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 8 Project</span>
+    <span class="reading-time">~40 min · Level 2, Assisted</span>
+  </div>
+  <h1>Build a Two-Server CLI Host</h1>
+  <p>Extend Chapter 7's CLI host to connect the notes AND bookmarks
+  servers simultaneously, with namespaced commands.</p>
+
+  <div class="hook">
+    <p>
+      Commands now look like <code>notes.save_note ...</code> or
+      <code>bookmarks.add_bookmark ...</code> — the namespace prefix from
+      this chapter's lesson, made real. Building this surfaced a genuine
+      limitation worth knowing about: a naive CLI argument parser only
+      produces strings, but <code>add_bookmark</code>'s <code>tags</code>
+      argument requires a list. The reference solution's
+      <code>parse_line</code> handles bracketed values like
+      <code>tags=[mcp,docs]</code> as lists — a small, real example of
+      client code needing to match a tool's actual schema, not just pass
+      strings and hope.
+    </p>
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <h2>Build it</h2>
+  <p>
+    Implement <code>MultiServerHost.connect</code> (namespace a server's
+    tools into the shared catalog) and <code>run_line</code> (parse,
+    look up the namespaced command, route to the right client, check
+    <code>is_error</code>). Then wire up both servers in <code>main()</code>.
+  </p>
+
+  <div class="what-is">
+    <span class="label">Verification</span>
+    <pre><code>printf 'notes.save_note title="todo" body="buy milk"\nbookmarks.add_bookmark url="https://modelcontextprotocol.io" title="MCP Docs" tags=[mcp,docs]\nbookmarks.list_bookmarks\nquit\n' | python solution.py</code></pre>
+    Expect both commands to succeed against their respective servers,
+    with <code>bookmarks.list_bookmarks</code> showing the saved URL.
+  </div>
+
+  <div class="what-is">
+    <span class="label">Extension challenge</span>
+    Add a third server (reuse Chapter 8's exercise servers, which
+    deliberately collide on <code>search</code>) and confirm your host
+    handles the collision correctly via namespacing — try calling both
+    <code>notes-service.search</code> and <code>docs-service.search</code>
+    and confirm they return different results.
+  </div>
+
+  <div class="points-to-remember">
+    <h2>Why this project matters</h2>
+    <p>
+      This is the first project in the course connecting two genuinely
+      different, independently-built servers to one host at once — the
+      architecture Chapter 2 described in the abstract, now something
+      you've actually run.
+    </p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../interview-questions.html">&larr; Interview Questions</a>
+    <a href="../../../index.html">All Chapters &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

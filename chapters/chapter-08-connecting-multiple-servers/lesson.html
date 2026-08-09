@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connecting Multiple Servers to One Agent — MCP for Everyone</title>
+<meta name="description" content="Merging tool catalogs from multiple servers and resolving a real, reproduced name collision.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-08">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../../index.html">&larr; Back to all chapters</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 8</span>
+    <span class="badge-difficulty">Advanced</span>
+    <span class="reading-time">~30 min</span>
+  </div>
+
+  <h1>Connecting Multiple Servers to One Agent</h1>
+  <p class="lede">
+    Chapter 2 promised this: two servers, one host, a real tool-name
+    collision reproduced and fixed — not a hypothetical, an actual bug
+    you can trigger.
+  </p>
+
+  <nav class="page-toc" aria-label="On this page">
+    <span class="toc-label">On this page</span>
+    <a href="#hook">1. Two servers, one host</a>
+    <a href="#the-collision">2. Reproducing the collision</a>
+    <a href="#namespacing">3. The fix: namespacing</a>
+    <a href="#routing-calls">4. Routing calls back to the right server</a>
+    <a href="#production">5. Production scenario: the silently shadowed tool</a>
+    <a href="#mistakes">6. Common mistakes</a>
+    <a href="#thought-process">7. Builder thought process</a>
+    <a href="#recap">8. Points to remember</a>
+    <a href="#cheat-sheet">9. Cheat sheet</a>
+  </nav>
+
+  <div class="hook" id="hook">
+    <p>
+      Chapter 2 showed a diagram: one host, three clients, three
+      independent servers, "each server has no idea the other two exist."
+      That independence is exactly the problem this chapter solves —
+      two servers built by two different teams can easily both expose a
+      tool called <code>search</code>, and neither team did anything
+      wrong. The host is the only place that can see both catalogs at
+      once, so resolving the collision is entirely the host's job.
+    </p>
+  </div>
+
+  <section id="the-collision" class="subtopic">
+    <h2>Reproducing the Collision</h2>
+    <p>
+      Two independent servers, each with a <code>search</code> tool that
+      does something completely different:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">two servers, same tool name</span>
+      </div>
+      <pre><code>server_a = MCPServer("notes-service")
+@server_a.tool()
+def search(query: str) -> list[str]:
+    """Search notes for a query."""
+    return [f"note-match-for-{query}"]
+
+server_b = MCPServer("docs-service")
+@server_b.tool()
+def search(query: str) -> list[str]:
+    """Search documentation for a query."""
+    return [f"doc-match-for-{query}"]</code></pre>
+    </div>
+    <p>
+      A host connecting to both and merging catalogs the obvious way —
+      a plain dict keyed by tool name — silently loses one:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">naive merge (buggy)</span>
+      </div>
+      <pre><code>merged = {}
+for t in tools_a.tools:
+    merged[t.name] = ("A", t)
+for t in tools_b.tools:
+    merged[t.name] = ("B", t)   # silently overwrites A's entry</code></pre>
+    </div>
+    <p>Running this against the two real servers above:</p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">output</span>
+      </div>
+      <pre><code>Server A tools: ['search']
+Server B tools: ['search']
+Naive merged catalog: {'search': 'B'}</code></pre>
+    </div>
+    <p>
+      Server A's <code>search</code> is completely gone from the merged
+      catalog — not erroring, not warning, just gone. A model given this
+      catalog can never call notes-service's search again; every
+      "search" call it makes routes to docs-service instead, and nothing
+      in the system tells anyone this happened.
+    </p>
+  </section>
+
+  <section id="namespacing" class="subtopic">
+    <h2>The Fix: Namespacing</h2>
+    <p>
+      Prefix each tool name with its originating server's identifier
+      before merging:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">namespaced merge</span>
+      </div>
+      <pre><code>namespaced = {}
+for t in tools_a.tools:
+    namespaced[f"notes-service.{t.name}"] = ("A", t)
+for t in tools_b.tools:
+    namespaced[f"docs-service.{t.name}"] = ("B", t)</code></pre>
+    </div>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">output</span>
+      </div>
+      <pre><code>Namespaced merged catalog: ['notes-service.search', 'docs-service.search']</code></pre>
+    </div>
+    <p>
+      Both tools survive. The trade-off: the model now sees
+      <code>notes-service.search</code> instead of a plain
+      <code>search</code>, which is a slightly worse name from the
+      model's point of view but an unambiguous one — and unambiguous
+      beats silently wrong every time.
+    </p>
+  </section>
+
+  <section id="routing-calls" class="subtopic">
+    <h2>Routing Calls Back to the Right Server</h2>
+    <p>
+      Namespacing the catalog is only half the job — when the model
+      picks <code>notes-service.search</code>, the host needs to strip
+      the prefix and route the call to the correct client:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">routing</span>
+      </div>
+      <pre><code>clients_by_namespace = {"notes-service": client_a, "docs-service": client_b}
+
+async def call_namespaced_tool(namespaced_name: str, arguments: dict):
+    namespace, _, tool_name = namespaced_name.partition(".")
+    client = clients_by_namespace[namespace]
+    return await client.call_tool(tool_name, arguments)</code></pre>
+    </div>
+    <p>
+      This is the same discipline as Chapter 7's <code>ToyHost</code>,
+      extended: discovery now merges multiple catalogs instead of one,
+      and invocation now needs a routing step before it can call
+      <code>call_tool</code> on the right client.
+    </p>
+  </section>
+
+  <section id="production" class="subtopic">
+    <h2>Production Scenario: The Silently Shadowed Tool</h2>
+    <p>
+      A platform team connected a new "documentation search" server to
+      an existing host that already had a "notes search" server
+      connected, using a naive dict-merge exactly like the one above.
+      Nothing crashed. Notes search simply stopped working — support
+      tickets came in describing the assistant "not finding" notes that
+      definitely existed, while documentation search worked perfectly.
+      The root cause took longer to find than it should have precisely
+      because there was no error anywhere: the merge succeeded, the
+      catalog looked reasonable, and only a careful diff between "tools
+      before this deploy" and "tools after" revealed that
+      <code>search</code> now pointed somewhere different. The fix was
+      namespacing, deployed with a test that asserts the merged catalog's
+      size equals the sum of each source catalog's size — a collision
+      silently makes that assertion fail.
+    </p>
+  </section>
+
+  <section id="mistakes" class="subtopic">
+    <h2>Common Mistakes</h2>
+    <ul>
+      <li>Merging multiple servers' tool catalogs with a plain
+      dict-by-name, which silently drops collisions instead of erroring
+      — always namespace, or at minimum detect and loudly reject
+      collisions.</li>
+      <li>Namespacing the catalog for discovery but forgetting to route
+      calls back correctly, leaving <code>call_tool()</code> calls
+      failing with "unknown tool" because the namespace prefix was never
+      stripped.</li>
+      <li>Assuming collisions are rare — with enough independently-owned
+      servers, a name like <code>search</code>, <code>get</code>, or
+      <code>list</code> reappearing is close to guaranteed, not a corner
+      case.</li>
+      <li>Not testing catalog merging at all — the "size before equals
+      size after" assertion from the production scenario is cheap and
+      would have caught this immediately.</li>
+    </ul>
+  </section>
+
+  <section id="thought-process" class="subtopic">
+    <h2>Builder Thought Process</h2>
+    <div class="thinking-box">
+      <p><strong>Problem:</strong> confirm Chapter 2's promised
+      collision scenario actually happens, not just plausible in theory.</p>
+      <p><strong>Approach:</strong> built two minimal real servers, both
+      exposing a <code>search</code> tool with genuinely different
+      behavior, and merged their catalogs the way a naive host
+      implementation would.</p>
+      <p><strong>Validation:</strong> ran the merge and printed the
+      result — confirmed server A's tool vanished entirely, with no
+      error or warning anywhere in the process.</p>
+      <p><strong>Fix:</strong> namespaced merge, then confirmed both
+      tools survive and are individually callable through a routing
+      layer.</p>
+      <p><strong>Decision:</strong> recommend namespacing as the default
+      approach for any host connecting more than one server, rather than
+      "handle collisions if they come up" — given how easily
+      <code>search</code>/<code>get</code>/<code>list</code>-style names
+      collide, treating this as an edge case is itself the mistake.</p>
+    </div>
+  </section>
+
+  <section id="recap" class="subtopic">
+    <div class="points-to-remember">
+      <h2>Points To Remember</h2>
+      <ul>
+        <li>A naive dict-by-name merge of multiple servers' tool
+        catalogs silently drops colliding tool names — no error, no
+        warning.</li>
+        <li>Namespacing (prefixing each tool name with its server's
+        identifier) preserves every tool, at the cost of slightly less
+        readable names.</li>
+        <li>Namespacing the catalog and routing calls back to the right
+        client are two separate steps — both are required.</li>
+        <li>Test catalog merging explicitly (e.g., merged size equals
+        the sum of source sizes) — this cheaply catches collisions before
+        they reach production.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="cheat-sheet" class="subtopic">
+    <div class="what-is">
+      <span class="label">Cheat sheet</span>
+      <pre><code># Discovery: namespace every tool by server
+catalog = {}
+for server_name, client in clients.items():
+    tools = await client.list_tools()
+    for t in tools.tools:
+        catalog[f"{server_name}.{t.name}"] = (client, t)
+
+# Invocation: split the namespace, route to the right client
+async def call(namespaced_name, arguments):
+    server_name, _, tool_name = namespaced_name.partition(".")
+    client, _ = catalog[namespaced_name]
+    return await client.call_tool(tool_name, arguments)
+
+# Test: catch collisions immediately
+assert len(catalog) == sum(len((await c.list_tools()).tools) for c in clients.values())</code></pre>
+    </div>
+  </section>
+
+  <div class="what-is">
+    <span class="label">Interview questions (4 levels)</span>
+    See <a href="interview-questions.html">Chapter 8 interview questions</a>.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../../index.html">&larr; All Chapters</a>
+    <a href="quiz.html">Take the Quiz &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+    <span><a href="https://github.com/technaom/mcp-for-everyone">github.com/technaom/mcp-for-everyone</a></span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

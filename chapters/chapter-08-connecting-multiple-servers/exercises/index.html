@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connecting Multiple Servers Exercises — MCP for Everyone</title>
+<meta name="description" content="Hands-on exercises for Connecting Multiple Servers to One Agent.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-08">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../quiz.html">&larr; Back to the quiz</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 8 Exercises</span>
+    <span class="reading-time">~25 min</span>
+  </div>
+  <h1>Exercises: Connecting Multiple Servers to One Agent</h1>
+  <p>Reproduce the collision yourself, then implement the namespacing
+  fix and a test that would catch it automatically.</p>
+
+  <div class="what-is">
+    <span class="label">How to run these</span>
+    <pre><code>pip install "mcp[cli]"
+cd chapters/chapter-08-connecting-multiple-servers/exercises
+python solution.py   # or fill starter.py first</code></pre>
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">1</span> Implement the namespaced merge</h3>
+    <p>Complete <code>namespaced_merge</code> per TODO 1. Confirm both
+    servers' <code>search</code> tools survive.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">2</span> Implement routing</h3>
+    <p>Complete <code>call_namespaced</code> per TODO 2 and confirm
+    calling <code>notes-service.search</code> and
+    <code>docs-service.search</code> route to the correct, different
+    implementations.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">3</span> (Production-gear) Implement the collision test</h3>
+    <p>Complete <code>assert_no_collisions</code> per TODO 3. Confirm it
+    raises against the two colliding servers, then add a third server
+    with a uniquely-named tool and confirm it passes for that pair.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">4</span> (Production-gear) Add a third server, no collision</h3>
+    <p>Add a third minimal server with a tool named
+    <code>get_weather</code> (no collision with the other two). Extend
+    your namespaced merge to handle three servers instead of two.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">5</span> (Production-gear) Detect a *new* collision</h3>
+    <p>Add a fourth server that also exposes <code>get_weather</code>,
+    colliding with the server from Task 4. Run your collision test again
+    — confirm it catches this new collision too, without any changes to
+    the test itself.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">6</span> Selective namespacing</h3>
+    <p>Referencing this chapter's senior interview question 6: sketch
+    (in comments, doesn't need to run) how you'd namespace only the
+    colliding tools and leave uniquely-named ones with clean names.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../quiz.html">&larr; Back to Quiz</a>
+    <a href="../practice/index.html">Practice Bank &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

@@ -129,7 +129,7 @@ window.MFE_MODULES = [
   {
     title: "Module 4 — Building Clients & Hosts",
     summary: "The other half of the wire: connecting an agent to servers.",
-    examPath: null, /* written when Module 4's chapters are complete */
+    examPath: "assessments/written-exams/module-4-exam.md",
     chapters: [
       {
         id: "chapter-07",
@@ -149,7 +149,15 @@ window.MFE_MODULES = [
         id: "chapter-08",
         num: 8,
         title: "Connecting Multiple Servers to One Agent",
-        description: "Merging tool catalogs and resolving conflicts."
+        path: "chapters/chapter-08-connecting-multiple-servers/lesson.html",
+        description: "Merging tool catalogs and resolving a real, reproduced tool-name collision with namespacing.",
+        subtopics: [
+          { id: "hook", title: "Two servers, one host" },
+          { id: "the-collision", title: "Reproducing the collision" },
+          { id: "namespacing", title: "The fix: namespacing" },
+          { id: "routing-calls", title: "Routing calls back to the right server" },
+          { id: "recap", title: "Points to remember" }
+        ]
       }
     ]
   },

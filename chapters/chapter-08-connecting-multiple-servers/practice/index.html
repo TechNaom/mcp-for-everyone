@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connecting Multiple Servers Practice Bank — MCP for Everyone</title>
+<meta name="description" content="Practice bank for Connecting Multiple Servers to One Agent.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-08">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../exercises/index.html">&larr; Back to exercises</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 8 Practice Bank</span>
+    <span class="reading-time">~20 min</span>
+  </div>
+  <h1>Practice Bank: Connecting Multiple Servers to One Agent</h1>
+  <p>Multi-server judgment calls beyond the naming-collision mechanics.</p>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Support</span>
+    <h3>The regression nobody flagged</h3>
+    <p>Following this chapter's production scenario, what would you add
+    to a deploy pipeline (not just a test suite) to make a new collision
+    impossible to ship silently?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Product</span>
+    <h3>The user-visible tool name</h3>
+    <p>If a host's UI shows users which tool the assistant used (e.g., "used
+    notes-service.search"), is the namespaced name a UX problem? How would
+    you present it more cleanly without losing the disambiguation?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Cost</span>
+    <h3>The catalog re-merge</h3>
+    <p>A host with 10 connected servers re-runs the full namespaced merge
+    on every new conversation. What's the cost of this at scale, and how
+    does it relate to the catalog-caching discussion from Chapter 7?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Debugging</span>
+    <h3>The routing bug</h3>
+    <p>A namespaced catalog looks correct, but calling
+    <code>docs-service.search</code> actually invokes notes-service's
+    tool. What's the most likely bug in the routing code, based on this
+    chapter's <code>call_namespaced</code> pattern?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Operations</span>
+    <h3>The server that goes away mid-session</h3>
+    <p>One of three connected servers becomes unreachable partway through
+    a conversation. Should the host's merged catalog immediately drop
+    that server's tools, or leave them (and fail individual calls)?
+    Justify either answer.</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Eval</span>
+    <h3>The evaluation dataset that hides the bug</h3>
+    <p>A team's tool-selection eval dataset was built before a second
+    server with a colliding name was added, so no test case ever
+    exercises the ambiguous tool. What does this suggest about how eval
+    datasets need to evolve alongside a growing multi-server host?</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../exercises/index.html">&larr; Exercises</a>
+    <a href="../interview-questions.html">Interview Questions &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

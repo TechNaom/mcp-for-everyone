@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connecting Multiple Servers Interview Questions — MCP for Everyone</title>
+<meta name="description" content="Interview questions for Connecting Multiple Servers to One Agent.">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-08">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="practice/index.html">&larr; Back to practice bank</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 8 Interview Questions</span>
+    <span class="reading-time">~15 min</span>
+  </div>
+  <h1>Interview Questions: Connecting Multiple Servers to One Agent</h1>
+  <p>Grouped by level. Each includes a strong answer, a red flag, and a follow-up.</p>
+
+  <div class="lesson-card">
+    <h2>1. (Beginner) Why can two independently-built MCP servers end up with a tool name collision, even though neither team did anything wrong?</h2>
+    <p><strong>Strong answer:</strong> Per Chapter 2, servers have no idea about each other — each team names their tools sensibly in isolation, and common verbs like "search," "get," or "list" are likely to be chosen independently by more than one team. The collision only becomes visible at the host, which is the only place that sees both catalogs.</p>
+    <p><strong>Red flag:</strong> Assumes this only happens due to a naming mistake, rather than recognizing it as a natural consequence of independent development.</p>
+    <p><strong>Follow-up:</strong> "Whose responsibility is it to prevent or resolve this — the server teams, or the host?"</p>
+    <p><strong>What this proves:</strong> Understands the collision as an architectural consequence, not a bug in either server.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>2. (Beginner) What actually happens with a naive dict-by-name catalog merge when two servers share a tool name?</h2>
+    <p><strong>Strong answer:</strong> One server's tool silently disappears from the merged catalog — whichever is merged second overwrites the first in the dict, with no error, warning, or any signal that it happened. Confirmed by actually running this: the "before" catalog has both, the "after" catalog has only one.</p>
+    <p><strong>Red flag:</strong> Assumes a merge conflict would raise an error or otherwise be obviously visible.</p>
+    <p><strong>Follow-up:</strong> "Why is 'silent' worse than 'crashes with an error' here?"</p>
+    <p><strong>What this proves:</strong> Has internalized that this is a silent-failure class of bug, which is exactly why it's dangerous.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>3. (Intermediate) Walk through both steps required to correctly support two servers with colliding tool names.</h2>
+    <p><strong>Strong answer:</strong> First, namespace the discovery catalog — prefix each tool name with its server's identifier so both survive. Second, route invocations correctly — when a namespaced tool is selected, strip the prefix and send the call to the client for the correct server. Doing only the first without the second leaves calls failing with "unknown tool" even though discovery looks correct.</p>
+    <p><strong>Red flag:</strong> Only mentions namespacing the catalog, missing that invocation needs a corresponding routing fix.</p>
+    <p><strong>Follow-up:</strong> "What data structure would you use to go from a namespaced tool name back to the right client?"</p>
+    <p><strong>What this proves:</strong> Sees the full solution, not just the half that's visible in discovery output.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>4. (Intermediate) What test would have caught the lesson's production scenario before it reached users?</h2>
+    <p><strong>Strong answer:</strong> An assertion that the merged catalog's size equals the sum of each source server's catalog size — a collision makes this fail immediately and cheaply, without needing to know in advance which specific tool names might collide. This is far more robust than trying to enumerate "known" collision-prone names.</p>
+    <p><strong>Red flag:</strong> Proposes manually checking for specific known collision names instead of a general structural invariant.</p>
+    <p><strong>Follow-up:</strong> "Would this test run in CI, at deploy time, or at host startup? What's the trade-off?"</p>
+    <p><strong>What this proves:</strong> Designs tests around structural invariants rather than enumerable specific cases.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>5. (Senior) A namespaced tool name like "notes-service.search" is objectively worse for a model to reason about than plain "search." How do you justify this trade-off?</h2>
+    <p><strong>Strong answer:</strong> An unambiguous-but-slightly-uglier name is strictly better than an ambiguous-but-clean one that silently routes to the wrong implementation — the cost of the ugly name is a minor, bounded model-reasoning tax; the cost of the collision is an unbounded, silent correctness bug. You can partially mitigate the readability cost with good tool descriptions (which the model also sees) without needing the name itself to be maximally clean. Trading a small, known cost for eliminating an unbounded, invisible one is the right call.</p>
+    <p><strong>Red flag:</strong> Treats "the model might get confused by the namespace" as an equally serious concern to silent data corruption/misrouting.</p>
+    <p><strong>Follow-up:</strong> "Is there a middle ground that keeps clean names when there's no collision and only namespaces when needed?"</p>
+    <p><strong>What this proves:</strong> Weighs correctness against usability correctly, rather than treating them as equally weighted concerns.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>6. (Senior) Design a host architecture that only namespaces tools when there's an actual collision, keeping clean names otherwise.</h2>
+    <p><strong>Strong answer:</strong> During discovery, build the catalog in two passes: first pass collects all tool names per server; detect any name appearing in more than one server's catalog. Only those colliding names get namespaced in the final merged catalog; unique names stay clean. This requires the routing layer to handle both namespaced and plain names, and requires re-running collision detection any time a server's catalog changes (recall Chapter 7's catalog-caching discussion) — a name that was previously unique can become a collision if a new server joins later.</p>
+    <p><strong>Red flag:</strong> Doesn't consider that collision status can change over time as servers are added, or proposes a static namespacing decision made once and never revisited.</p>
+    <p><strong>Follow-up:</strong> "What happens to a host's in-flight understanding of the catalog if a new server connects mid-conversation and introduces a new collision?"</p>
+    <p><strong>What this proves:</strong> Designs a more sophisticated solution while correctly identifying the added complexity (dynamic collision detection) it requires.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>7. (Architect) How would you prevent tool-name collisions across an org with dozens of independently-owned MCP servers, before they even reach a host?</h2>
+    <p><strong>Strong answer:</strong> A host-side fix (namespacing) is necessary but not sufficient at scale — it treats the symptom every time a host connects new servers. A better organizational answer: a shared naming convention or registry that server-owning teams check against before shipping a new tool (similar to how API endpoint naming or package naming conventions prevent collisions in other systems), combined with the host-side namespacing as a safety net for cases the convention didn't catch. Relying purely on host-side fixes means every host independently rediscovers and re-solves the same problem.</p>
+    <p><strong>Red flag:</strong> Proposes only a host-side technical fix with no org-level prevention, guaranteeing the problem recurs indefinitely as more servers are built.</p>
+    <p><strong>Follow-up:</strong> "Would you make this convention mandatory (blocking a server's deployment) or advisory? What's the trade-off?"</p>
+    <p><strong>What this proves:</strong> Thinks about preventing a class of bug at the organizational level, not just handling each instance defensively.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>8. (Architect) Two servers your host connects to are owned by different companies (yours and a partner's). One update changes a tool's behavior without renaming it. How does multi-server architecture make this riskier than a single-server setup?</h2>
+    <p><strong>Strong answer:</strong> With multiple independently-owned servers, your host has no control over and often no visibility into a partner's deploy schedule or behavior changes — a tool your host has relied on can change semantics silently from your perspective, and (per this chapter's core lesson) namespacing solves the naming-collision problem but does nothing about a within-name behavior change. Mitigations: version pinning or capability negotiation with partner servers where possible, monitoring/alerting on unexpected changes in a partner tool's response shape, and treating third-party server behavior as untrusted/unstable input requiring the same defensive validation as user input, not as a fixed contract.</p>
+    <p><strong>Red flag:</strong> Assumes namespacing or any purely naming-based fix addresses this — behavior changes under a stable name are a distinct risk this chapter's fix doesn't touch.</p>
+    <p><strong>Follow-up:</strong> "How would you detect a partner's tool behavior change without them announcing it?"</p>
+    <p><strong>What this proves:</strong> Distinguishes the naming-collision problem this chapter solves from a related-but-different multi-party trust problem, showing systems-level thinking beyond the chapter's specific fix.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="practice/index.html">&larr; Practice Bank</a>
+    <a href="project/index.html">Build the Project &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>
