@@ -4,8 +4,9 @@ Free, interactive Model Context Protocol course and build-in-public
 engineering track: visual lessons, working server/client labs, security
 exercises, evaluation practice, interview prep, and portfolio projects.
 
-🔗 **MCP for Everyone Live UI:** <https://technaom.github.io/mcp-for-everyone/>
-*(not yet published — see `PROJECT_STATE.md`)*
+🔗 **Repo:** <https://github.com/TechNaom/mcp-for-everyone>
+🔗 **Live UI:** <https://technaom.github.io/mcp-for-everyone/>
+*(GitHub Pages not yet enabled — no root `index.html` yet, see `PROJECT_STATE.md`)*
 
 This course follows the same philosophy as `python-for-everyone` and
 `rag-for-everyone`:
