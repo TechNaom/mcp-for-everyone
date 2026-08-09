@@ -58,4 +58,5 @@ async def main() -> None:
         print(await host.handle("list_note"))  # typo -- exercise 3
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

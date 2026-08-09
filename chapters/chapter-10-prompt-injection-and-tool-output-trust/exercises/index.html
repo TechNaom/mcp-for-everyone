@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Injection & Tool-Output Trust Exercises — MCP for Everyone</title>
+<meta name="description" content="Hands-on exercises for Prompt Injection & Tool-Output Trust.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-10">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../quiz.html">&larr; Back to the quiz</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 10 Exercises</span>
+    <span class="reading-time">~25 min</span>
+  </div>
+  <h1>Exercises: Prompt Injection & Tool-Output Trust</h1>
+  <p>Extend the scanner, then build the layered "flag, don't silently
+  allow or block" pattern from the lesson.</p>
+
+  <div class="what-is">
+    <span class="label">How to run these</span>
+    <pre><code>pip install "mcp[cli]"
+cd chapters/chapter-10-prompt-injection-and-tool-output-trust/exercises
+python solution.py   # or fill starter.py first</code></pre>
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">1</span> Catch the sneaky page</h3>
+    <p>Add a pattern that catches the "sneaky" page's phrasing without
+    false-positiving on the benign recipe page, per TODO 1.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">2</span> (Production-gear) Wrap fetch + scan</h3>
+    <p>Implement <code>fetch_page_safely</code> per TODO 2, returning
+    both the content and the scan hits so calling code decides what to
+    do rather than the tool making that decision silently.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">3</span> (Production-gear) Wire up the confirmation policy</h3>
+    <p>Implement <code>should_require_confirmation</code> per TODO 3.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">4</span> (Production-gear) Combine with Chapter 9's scopes</h3>
+    <p>Import Chapter 9's <code>require_scope</code> pattern and apply
+    it to a hypothetical <code>delete_all_notes</code> tool. Even if the
+    malicious page's injected instruction "worked" on a model, what
+    scope would need to be present in the current context for the
+    instruction to cause real harm? Write this reasoning as a comment.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">5</span> Find a pattern your scanner misses</h3>
+    <p>Write a new fake "page" containing an injection attempt phrased
+    so your current patterns (including your Task 1 addition) don't
+    catch it. This is the point of the exercise — confirm for yourself
+    that the scanner is genuinely incomplete, not just told so.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">6</span> (Production-gear) Log every scan result</h3>
+    <p>Modify <code>fetch_page_safely</code> to print a log line for
+    every call (URL, hit count, timestamp) regardless of outcome — the
+    beginning of the audit trail this chapter's architect interview
+    question said was a prerequisite for incident response.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../quiz.html">&larr; Back to Quiz</a>
+    <a href="../practice/index.html">Practice Bank &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

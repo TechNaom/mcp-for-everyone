@@ -164,7 +164,7 @@ window.MFE_MODULES = [
   {
     title: "Module 5 — Security & Trust Boundaries",
     summary: "MCP-specific security thinking: the course's core differentiator.",
-    examPath: null, /* written when Module 5's chapters are complete */
+    examPath: "assessments/written-exams/module-5-exam.md",
     chapters: [
       {
         id: "chapter-09",
@@ -185,7 +185,16 @@ window.MFE_MODULES = [
         id: "chapter-10",
         num: 10,
         title: "Prompt Injection & Tool-Output Trust",
-        description: "Defending against untrusted tool results."
+        path: "chapters/chapter-10-prompt-injection-and-tool-output-trust/lesson.html",
+        description: "Defend against untrusted tool results with a tested detection pattern, and understand why detection alone isn't enough.",
+        subtopics: [
+          { id: "hook", title: "The attacker who never calls a tool" },
+          { id: "the-attack", title: "A concrete injection attempt" },
+          { id: "detection", title: "Build: a detection pattern" },
+          { id: "why-not-enough", title: "Why detection alone isn't enough" },
+          { id: "real-mitigations", title: "The mitigations that actually hold" },
+          { id: "recap", title: "Points to remember" }
+        ]
       }
     ]
   },

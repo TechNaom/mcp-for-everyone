@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Injection & Tool-Output Trust Project — MCP for Everyone</title>
+<meta name="description" content="Project: build a tool-output firewall that scans, logs, and flags for confirmation.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-10">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../interview-questions.html">&larr; Back to interview questions</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 10 Project</span>
+    <span class="reading-time">~35 min · Level 2, Assisted</span>
+  </div>
+  <h1>Build a Tool-Output Firewall</h1>
+  <p>A reusable wrapper that scans, logs, and flags every tool call —
+  the layered defense from the lesson, packaged as something a real
+  host could actually use.</p>
+
+  <div class="hook">
+    <p>
+      This project reuses Chapter 10's exercises module — and building
+      it surfaced a real, general bug worth knowing about: importing a
+      Python file that unconditionally calls <code>asyncio.run()</code>
+      at the top level crashes if you're already inside a running event
+      loop (exactly what happens when a firewall wraps a live async tool
+      call). The fix, applied here and retroactively across every
+      earlier chapter with the same pattern, is a simple
+      <code>if __name__ == "__main__":</code> guard.
+    </p>
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <h2>Build it</h2>
+  <p>
+    Implement <code>ContentFirewall.call</code>: call the underlying
+    tool, scan the result, log every call (not just flagged ones), and
+    return a <code>FirewallVerdict</code> the calling host can act on.
+  </p>
+
+  <div class="what-is">
+    <span class="label">Verification</span>
+    <pre><code>python solution.py</code></pre>
+    Expect all three demo pages processed, with the malicious and
+    sneaky pages both showing <code>confirm=True</code>, and a full
+    log printed at the end showing all three calls — including the
+    clean one.
+  </div>
+
+  <div class="what-is">
+    <span class="label">Extension challenge</span>
+    Combine this with Chapter 9's <code>require_scope</code> decorator:
+    make <code>ContentFirewall</code> refuse to even attempt a tool call
+    if the current caller lacks a <code>content:fetch</code> scope,
+    demonstrating both defense layers working together in one wrapper.
+  </div>
+
+  <div class="points-to-remember">
+    <h2>Why this project matters</h2>
+    <p>
+      A real host doesn't call tools directly the way every earlier
+      chapter's tests did — it calls them through exactly this kind of
+      wrapper, so scanning and logging happen automatically for every
+      call, not as an opt-in step someone has to remember. This is the
+      shape of code that actually ships in a production host.
+    </p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../interview-questions.html">&larr; Interview Questions</a>
+    <a href="../../../index.html">All Chapters &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

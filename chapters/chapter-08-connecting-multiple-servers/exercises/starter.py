@@ -65,4 +65,5 @@ async def main() -> None:
         # Exercise your TODOs here once implemented.
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -91,4 +91,5 @@ async def main() -> None:
             print(f"Collision test caught it: {exc}")
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

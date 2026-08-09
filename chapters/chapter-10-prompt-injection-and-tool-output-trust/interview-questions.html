@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Injection & Tool-Output Trust Interview Questions — MCP for Everyone</title>
+<meta name="description" content="Interview questions for Prompt Injection & Tool-Output Trust.">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-10">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="practice/index.html">&larr; Back to practice bank</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 10 Interview Questions</span>
+    <span class="reading-time">~15 min</span>
+  </div>
+  <h1>Interview Questions: Prompt Injection & Tool-Output Trust</h1>
+  <p>Grouped by level. Each includes a strong answer, a red flag, and a follow-up.</p>
+
+  <div class="lesson-card">
+    <h2>1. (Beginner) What makes prompt injection via tool output different from the permission attacks Chapter 9 covered?</h2>
+    <p><strong>Strong answer:</strong> Chapter 9's threats involve a caller trying to invoke something it shouldn't be able to. Tool-output injection needs no unauthorized caller at all — a properly-authorized tool call returns content (fetched from an external source) that contains text engineered to manipulate the model reading it. The "attacker" is embedded in the data, not acting as a caller.</p>
+    <p><strong>Red flag:</strong> Conflates this with a permissions/authentication problem, missing that it's a data-trust problem instead.</p>
+    <p><strong>Follow-up:</strong> "Could a tool call that a caller is fully authorized to make still be part of an injection attack? How?"</p>
+    <p><strong>What this proves:</strong> Distinguishes two genuinely different threat models this course covers back-to-back.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>2. (Beginner) Is a regex-based injection scanner a complete solution?</h2>
+    <p><strong>Strong answer:</strong> No — it catches unsophisticated, keyword-based attempts but misses rephrased instructions, encoded content, multi-step injections, and subtler manipulation that doesn't use flagged phrasing at all. It's a real, cheap first layer, not a solved problem.</p>
+    <p><strong>Red flag:</strong> Presents pattern matching as sufficient defense on its own.</p>
+    <p><strong>Follow-up:</strong> "What's a rephrasing of 'ignore previous instructions' that this chapter's scanner would miss?"</p>
+    <p><strong>What this proves:</strong> Doesn't overclaim a partial mitigation — matches the course's explicit no-hype standard.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>3. (Intermediate) Why does least privilege (Chapter 9) matter for defending against prompt injection, which is a completely different attack category?</h2>
+    <p><strong>Strong answer:</strong> Even if an injection successfully manipulates a model into "wanting" to take an action, it can only actually cause harm if the current context has the scope/permission to perform that action. An injected instruction targeting a tool the model has no access to in that session is a no-op regardless of how convincing the injection is. Least privilege limits blast radius even when a content-level defense fails.</p>
+    <p><strong>Red flag:</strong> Treats least privilege and injection defense as unrelated topics rather than seeing how one backstops the other.</p>
+    <p><strong>Follow-up:</strong> "Does this mean a host should grant broad scope to trusted-looking tools and narrow scope to less-trusted ones? What's the risk in that framing?"</p>
+    <p><strong>What this proves:</strong> Connects security layers across chapters instead of treating each as isolated.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>4. (Intermediate) A tool summarizes user-submitted support tickets. Why is this a plausible injection vector even though it never "fetches the internet"?</h2>
+    <p><strong>Strong answer:</strong> Any content not fully controlled by the system operator — user-submitted text, third-party data, anything from outside the trust boundary — can carry injected instructions once it enters a model's context, per this chapter's production scenario. "Fetches external content" is a broader category than "browses the web"; user input relayed through a tool qualifies just as much.</p>
+    <p><strong>Red flag:</strong> Assumes only obviously-external-facing tools (web fetchers, API integrations) are injection vectors.</p>
+    <p><strong>Follow-up:</strong> "Name two other tool types in this course that could carry the same risk."</p>
+    <p><strong>What this proves:</strong> Generalizes the vulnerability pattern instead of pattern-matching only the chapter's specific example.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>5. (Senior) Design a defense-in-depth strategy for a host that connects to third-party MCP servers whose tool output you don't control.</h2>
+    <p><strong>Strong answer:</strong> Layer the mitigations from this chapter's cheat sheet rather than relying on any single one: cheap pattern-based scanning as an early filter, least-privilege scoping so a successful injection has limited blast radius, mandatory human confirmation for any consequential action a model proposes after processing untrusted content, and structural separation (marking fetched/external content distinctly in the prompt rather than concatenating it with instructions). No single layer needs to be perfect — the combination is what holds.</p>
+    <p><strong>Red flag:</strong> Proposes a single silver-bullet mitigation instead of layered defense.</p>
+    <p><strong>Follow-up:</strong> "Which of these layers would you prioritize implementing first, given limited engineering time, and why?"</p>
+    <p><strong>What this proves:</strong> Designs security as defense-in-depth, the standard professional posture for a problem that has no complete technical solution.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>6. (Senior) How would you write a test suite for prompt injection resistance, given that you can't exhaustively enumerate every possible injection phrasing?</h2>
+    <p><strong>Strong answer:</strong> Build a growing regression corpus of known injection patterns (including ones discovered via real incidents, like this chapter's production scenario) and test the scanner/mitigations against all of them on every change — not to prove completeness (impossible), but to prevent regressions on known cases. Pair this with periodic red-teaming (deliberately trying novel injection phrasings against the live system) rather than relying solely on a static test suite, since the corpus will always lag behind what a creative adversary could construct.</p>
+    <p><strong>Red flag:</strong> Believes a comprehensive test suite could ever prove the system is "safe from injection," rather than framing testing as regression prevention plus ongoing red-teaming.</p>
+    <p><strong>Follow-up:</strong> "Who owns updating this corpus when a new injection technique is discovered in the wild?"</p>
+    <p><strong>What this proves:</strong> Has realistic expectations about what testing can and can't prove for an inherently incomplete-by-design defense.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>7. (Architect) Design the incident-response process for a suspected successful prompt injection in production.</h2>
+    <p><strong>Strong answer:</strong> Requires, ahead of time: logging of tool outputs and the actions a host took after processing them (Chapter 11 territory), so an incident can be reconstructed after the fact — without this, "did an injection succeed" is unanswerable. On detection (from a user report, an anomalous action pattern, or scanning): immediately assess blast radius using the least-privilege model (what scope did the affected session actually have), determine whether the source (specific tool/server) can be temporarily disabled without breaking the whole system, and treat it as a security incident with the same rigor as a credential compromise — not a minor bug, given real actions may have been taken. Post-incident: add the specific injection pattern to the regression corpus from the previous question.</p>
+    <p><strong>Red flag:</strong> Has no logging/observability prerequisite in place, making the whole incident-response process theoretical rather than actionable.</p>
+    <p><strong>Follow-up:</strong> "How would you distinguish a successful injection from a model simply making an unrelated mistake?"</p>
+    <p><strong>What this proves:</strong> Designs the full incident lifecycle, not just prevention — architect-level completeness.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>8. (Architect) A business team wants to connect an MCP server that indexes and summarizes arbitrary user-uploaded documents, with tools that can send emails and modify calendar events. How do you evaluate this proposal?</h2>
+    <p><strong>Strong answer:</strong> This combination is high-risk by construction: user-uploaded documents are maximally untrusted content (worse than a curated third-party API, since literally anyone can upload anything), paired with high-impact tools (send, modify) that are exactly what an injection would try to exploit. Recommend: strict scope separation so the document-summarization capability and the send/modify capabilities are never available in the same context without an explicit human-confirmation step between them; treat document content as untrusted at the architecture level (structural marking, per this chapter), not just at the prompt-wording level; and push back on the proposal's scope if it doesn't include human confirmation for consequential actions triggered by document-derived content — approve the read/summarize half more readily than the "and can act on what it read" half without that safeguard.</p>
+    <p><strong>Red flag:</strong> Approves the proposal as-is without flagging the specific dangerous combination of maximally untrusted input plus high-impact output capabilities in the same trust context.</p>
+    <p><strong>Follow-up:</strong> "What would change your risk assessment if the uploaded documents were restricted to internal employees only, versus fully public uploads?"</p>
+    <p><strong>What this proves:</strong> Recognizes that risk isn't about individual capabilities in isolation, but about which combinations of untrusted-input and high-impact-output capabilities share a trust context — genuine architect-level risk assessment.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="practice/index.html">&larr; Practice Bank</a>
+    <a href="project/index.html">Build the Project &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

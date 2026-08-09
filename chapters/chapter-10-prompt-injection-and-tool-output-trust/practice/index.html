@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Injection & Tool-Output Trust Practice Bank — MCP for Everyone</title>
+<meta name="description" content="Practice bank for Prompt Injection & Tool-Output Trust.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-10">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../exercises/index.html">&larr; Back to exercises</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 10 Practice Bank</span>
+    <span class="reading-time">~20 min</span>
+  </div>
+  <h1>Practice Bank: Prompt Injection & Tool-Output Trust</h1>
+  <p>Risk judgment for a threat that has no complete technical solution.</p>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Security</span>
+    <h3>The false sense of security</h3>
+    <p>A team ships a regex-based injection scanner and marks the
+    "prompt injection" risk item as "mitigated" in their security review.
+    What's wrong with this framing, and what would a more accurate status
+    look like?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Product</span>
+    <h3>The confirmation fatigue problem</h3>
+    <p>A host requires human confirmation for every tool call that
+    touches externally-fetched content, per this chapter's layered
+    defense. Users start reflexively clicking "confirm" without reading,
+    defeating the purpose. What UX change would help without abandoning
+    the confirmation requirement entirely?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Support</span>
+    <h3>The support ticket about a weird summary</h3>
+    <p>A user reports a document summary "left out something important."
+    Given this chapter's production scenario, what would you check first,
+    before assuming it's a normal summarization-quality issue?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Compliance</span>
+    <h3>The regulator's question</h3>
+    <p>A compliance team asks whether your AI system is "protected against
+    prompt injection." How do you answer honestly, given this chapter's
+    "why detection alone isn't enough" section, without either
+    overclaiming safety or sounding like the system has no protections
+    at all?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Cost</span>
+    <h3>The expensive confirmation step</h3>
+    <p>Requiring human confirmation for every consequential action after
+    processing untrusted content slows down an otherwise-automated
+    workflow significantly. How would you decide which actions genuinely
+    need this friction versus which are low-risk enough to automate?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Operations</span>
+    <h3>The third-party server you don't control</h3>
+    <p>Your host connects to a partner's MCP server whose tool outputs
+    you can't audit or modify. What layers from this chapter's defense
+    strategy can you still apply, given you don't control the source of
+    the potentially-injected content?</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../exercises/index.html">&larr; Exercises</a>
+    <a href="../interview-questions.html">Interview Questions &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

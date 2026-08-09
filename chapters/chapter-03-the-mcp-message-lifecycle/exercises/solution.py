@@ -51,4 +51,5 @@ async def main() -> None:
         print("meta:", list_result.meta)
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

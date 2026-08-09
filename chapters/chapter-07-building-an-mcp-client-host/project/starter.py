@@ -83,4 +83,5 @@ async def main() -> None:
         # Print the result of each command via host.run_line().
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

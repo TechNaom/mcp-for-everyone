@@ -77,4 +77,5 @@ async def main() -> None:
         print("write+delete, delete_note ->", r3.is_error, r3.structured_content)
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

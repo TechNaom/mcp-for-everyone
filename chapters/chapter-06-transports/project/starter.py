@@ -44,4 +44,5 @@ async def main() -> None:
     sys.exit(0 if healthy else 1)
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
