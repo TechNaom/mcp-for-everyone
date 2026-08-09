@@ -45,28 +45,41 @@ this file won't be as fresh as that one. What exists:
 - `templates/` and `assets/{style.css,sidebar.js,progress.js,quiz-engine.js,chapters-data.js}`
   copied from `rag-for-everyone` and rebranded (structure only), plus the
   full 13-chapter roster wired into `chapters-data.js` for sidebar nav
-- **Chapters 1–6 (Modules 1–3) are fully built and validated** — same
+- **Chapters 1–10 (Modules 1–5) are fully built and validated** — same
   page set each: `lesson.html`, `quiz.html`, `interview-questions.html`,
   `exercises/{index.html,starter.py,solution.py or reasoning tasks}`,
   `practice/index.html`, `project/{index.html,...}`. Every Python example
   was installed and run against the real `mcp` SDK v2.0.0 before being
   written into a lesson — do not add new code examples to this course
   from memory; install `mcp[cli]` in a scratch venv and run them first.
-  This discipline has caught real, non-obvious SDK behavior repeatedly:
-  Chapter 4's silent type-widening and URI-template `://` collision;
-  Chapter 3's wrong assumption that calling a nonexistent tool raises a
-  Python exception (it doesn't); Chapter 5's `list_resources()` vs.
-  `list_resource_templates()` split; Chapter 6's `stateless_http`
-  defaulting to `False` even under the "stateless" spec. Chapters 1–2 are
-  conceptual (no code, per the curriculum map) with written-memo/diagram
-  projects instead. Chapters 3, 5, and 6 all reuse Chapter 4's
-  `solution.py` via `importlib.util.spec_from_file_location` (NOT a
-  `sys.path` + `import solution` trick — that broke depending on
+  This discipline has caught real, non-obvious SDK/behavior issues
+  repeatedly: Chapter 4's silent type-widening and URI-template `://`
+  collision; Chapter 3's wrong assumption that calling a nonexistent
+  tool raises a Python exception (it doesn't); Chapter 5's
+  `list_resources()` vs. `list_resource_templates()` split; Chapter 6's
+  `stateless_http` defaulting to `False` even under the "stateless"
+  spec; Chapter 8's real, reproduced tool-name collision across two live
+  servers; **Chapter 10's discovery that 8 prior chapters' files called
+  `asyncio.run(main())` unguarded at module level, which crashes when
+  imported from inside a running event loop** — fixed with
+  `if __name__ == "__main__":` guards across 17 files spanning Chapters
+  3, 6, 7, 8, 9, 10. Chapters 1–2 are conceptual (no code, per the
+  curriculum map) with written-memo/diagram projects instead. Chapters
+  3, 5, 6, 7, 8, 9, and 10 reuse Chapter 4's `solution.py` (and
+  sometimes each other's) via `importlib.util.spec_from_file_location`
+  (NOT a `sys.path` + `import solution` trick — that broke depending on
   invocation method since multiple files share the name `solution.py`;
-  see any of those files' `_load_chapter_4_module()` docstring for why).
-  If you ever change Chapter 4's `exercises/solution.py` or
-  `project/solution.py` function signatures, re-run every chapter that
-  imports it. Audits: `quality-audits/chapter-0{1..6}-audit.md`.
+  see any `_load_chapter_4_module()`-style docstring for why). **Any new
+  file that imports another chapter's module MUST end with
+  `if __name__ == "__main__": asyncio.run(main())`, never a bare
+  top-level `asyncio.run(main())`** — this is now a hard rule for this
+  repo, not a style preference. If you ever change Chapter 4's
+  `exercises/solution.py` or `project/solution.py` function signatures,
+  re-run every chapter that imports it. Chapter 9's `require_scope`
+  decorator sets a `_required_scope` marker attribute specifically so
+  Chapter 9's audit-tool project can introspect it — don't remove that
+  marker line if editing `require_scope`. Audits:
+  `quality-audits/chapter-0{1..9}-audit.md`, `chapter-10-audit.md`.
 - **Root website is live**: `index.html`, `docs/curriculum/index.html`
   (styled roadmap), deployed via `.github/workflows/pages.yml` to
   https://technaom.github.io/mcp-for-everyone/. `assets/chapters-data.js`
@@ -120,19 +133,16 @@ Chapters 7–13 don't exist yet.
 
 ## Current task
 
-Chapters 1–6 (Modules 1–3) are done and validated. Next: Module 4
-(Chapters 7–8, "Building an MCP Client/Host" and "Connecting Multiple
-Servers to One Agent") — see "Next Recommended Task" in
-`PROJECT_STATE.md` for specifics, including that Chapter 7 needs an
-actual host loop built (no prior chapter has built the host side) and
-Chapter 8 needs a real tool-name collision resolved across two live
-servers.
+Chapters 1–10 (Modules 1–5) are done and validated. Next: Module 6
+(Chapters 11–12, "Testing, Debugging & Observability" and "Versioning,
+Errors & Production Hardening") — see "Next Recommended Task" in
+`PROJECT_STATE.md` for specifics, including a suggested regression
+re-check of the asyncio-guard fix before adding new chapters.
 
 ## Next task after that
 
-Continue Module 5 (Chapters 9–10, security — this course's stated core
-differentiator), then Module 6 (11–12), then the Module 7 capstone
-(Chapter 13), following the curriculum map's build order — one module
+Continue the Module 7 capstone (Chapter 13), following the curriculum
+map's build order — one module
 at a time, validated after each, per the master workflow. Don't
 mass-generate ahead of validation.
 

@@ -120,9 +120,38 @@ production-grade, interview-ready, original content only).
       chapter's HTML but never actually defined in `style.css` — a gap
       inherited unnoticed from `rag-for-everyone`'s template.
 
+- [x] Step 6 (Module 4): Chapters 7–8 built and validated, completing
+      Module 4. Chapter 7 built the course's first *host* (`ToyHost`) —
+      keyword matching stands in for an LLM's decision step, explicitly
+      labeled as a simplification; discovery/invocation/error-handling
+      mechanics are real and tested. Chapter 8 reproduced, for real, the
+      tool-name collision Chapter 2 promised: two live MCPServer
+      instances both exposing `search` merged with a naive dict, and
+      server A's tool silently vanished — confirmed by running it.
+      Fixed with namespacing + routing. Wrote
+      `assessments/written-exams/module-4-exam.md`.
+- [x] Step 6 (Module 5): Chapters 9–10 built and validated, completing
+      Module 5 — this course's stated core differentiator (security).
+      Chapter 9 built a tested `require_scope` decorator enforcing least
+      privilege, explicit about where it simplifies (identity
+      verification via a contextvar, not real auth) vs. where it doesn't
+      (the enforcement pattern, which matches the SDK's real
+      `AuthSettings`/`authenticated_principal` shape). Chapter 10 built
+      and ran a real prompt-injection scanner against benign/malicious/
+      sneaky tool output, explicitly framed as one incomplete layer, not
+      a solved problem. Wrote `assessments/written-exams/module-5-exam.md`.
+      **Building Chapter 10's project surfaced a significant, general
+      bug**: 8 prior chapters' exercises/project files called
+      `asyncio.run(main())` unconditionally at module level, which
+      crashes when the file is imported from inside an already-running
+      event loop — exactly what a firewall-style wrapper does. Fixed
+      with `if __name__ == "__main__":` guards across all 17 affected
+      files (Chapters 3, 6, 7, 8, 9, 10), verified every affected
+      chapter's solutions still run correctly afterward.
+
 ## Pending / Not Started
 
-- [ ] Step 6 continued: build Chapters 7–13 (Modules 4–7), module by
+- [ ] Step 6 continued: build Chapters 11–13 (Modules 6–7), module by
       module, validating after each module.
 - [ ] Step 7: Build project implementations (L1–L4) and tests.
 - [ ] Step 8: Assessments — quizzes, written exams, interview questions,
@@ -186,16 +215,25 @@ priority on depth over count).
 
 ## Next Recommended Task
 
-Module 4 (Chapters 7–8): "Building an MCP Client/Host" and "Connecting
-Multiple Servers to One Agent." Chapter 7 should build an actual host
-loop — connect a client to a server, list tools, and drive a (mocked or
-simple rule-based) decision about which tool to call, since no prior
-chapter has built the *host* side, only servers and raw clients. Chapter
-8 needs at least two live servers connected simultaneously from one
-host process, with a real tool-name collision to resolve (per Chapter
-2's Q3/Q7 interview questions, which already promised this would be
-covered). Test everything against the real SDK before writing it into a
-lesson, same discipline as every chapter so far. Validate each with a
-fresh `quality-audits/chapter-0N-audit.md`, write the Module 4 exam once
-both chapters are done, before moving to Module 5 (security — this
-course's stated differentiator).
+Module 6 (Chapters 11–12): "Testing, Debugging & Observability" and
+"Versioning, Errors & Production Hardening." Chapter 11 has a natural
+anchor already sitting in the codebase: every chapter's `is_error`
+discipline and Chapter 10's `ContentFirewall` logging pattern are
+half-built observability; formalize them (structured logging, a trace
+correlating a request across host → client → server, per Chapter 3's
+OpenTelemetry `_meta` fields) rather than inventing new examples from
+scratch. Chapter 12 should concretely exercise the modern/legacy
+version-mismatch handling Chapter 3 described in the abstract (the
+`server/discover` probe pattern, `UnsupportedProtocolVersionError`) —
+no chapter has actually built version-compatibility-handling code yet,
+only described the spec's rules for it. Test everything against the
+real SDK before writing it into a lesson. Validate each with a fresh
+`quality-audits/chapter-0N-audit.md`, write the Module 6 exam once both
+chapters are done, before moving to the Module 7 capstone (Chapter 13).
+
+**Before starting new chapters**, run a quick regression check: since
+Chapter 10's fix touched 17 files across 6 chapters, re-run each
+chapter's `exercises/solution.py` and `project/solution.py` once more if
+picking this up in a new session, to confirm nothing regressed between
+sessions (see the Module 5 completion entry above for the exact fix and
+file list).
