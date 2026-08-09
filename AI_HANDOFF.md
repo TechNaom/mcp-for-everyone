@@ -32,10 +32,14 @@ maintainer for "the TechNaom master prompt" rather than guessing.
   answers) must be original. Other TechNaom repos are structural
   references only, never content sources.
 
-## Current state (as of 2026-08-09)
+## Current state (as of 2026-08-09): COURSE COMPLETE
 
-**Read `PROJECT_STATE.md` for the authoritative, up-to-date status** —
-this file won't be as fresh as that one. What exists:
+**All 13 chapters across all 7 modules are built, tested, and live** at
+https://technaom.github.io/mcp-for-everyone/. Only optional polish
+remains (CI, CONTRIBUTING.md, etc. — see PROJECT_STATE.md's "Next
+Recommended Task"). **Read `PROJECT_STATE.md` for the authoritative,
+up-to-date status** — this file won't be as fresh as that one. What
+exists:
 
 - Directory skeleton (`chapters/`, `docs/`, `templates/`, `assessments/`,
   `codebase/`, `assets/`, `quality-audits/`, `scripts/`, `.github/workflows/`)
@@ -78,8 +82,20 @@ this file won't be as fresh as that one. What exists:
   re-run every chapter that imports it. Chapter 9's `require_scope`
   decorator sets a `_required_scope` marker attribute specifically so
   Chapter 9's audit-tool project can introspect it — don't remove that
-  marker line if editing `require_scope`. Audits:
-  `quality-audits/chapter-0{1..9}-audit.md`, `chapter-10-audit.md`.
+  marker line if editing `require_scope`. Chapters 11–13 continue the
+  same pattern: Chapter 11 formalizes structured, trace-correlated
+  logging via the real `Context` API and documents that
+  `ctx.info()`/`ctx.log()` are deprecated as of this exact spec version
+  (SEP-2577) — confirmed by a live warning, not assumed. Chapter 12
+  proves (not just describes) that the SDK's `MCPServer` is dual-era by
+  default: `Client(mcp, mode="legacy")` completes a real `initialize`
+  handshake successfully against every server in this course. Chapter
+  13 (the capstone) ships a tested reference architecture combining
+  namespacing/scoping/injection-scanning/logging across two servers,
+  with honestly documented gaps — `solution.py` there closes one gap as
+  a worked example, explicitly not "the" correct capstone answer, since
+  it's an open architecture challenge. Audits:
+  `quality-audits/chapter-0{1..9}-audit.md`, `chapter-1{0,1,2,3}-audit.md`.
 - **Root website is live**: `index.html`, `docs/curriculum/index.html`
   (styled roadmap), deployed via `.github/workflows/pages.yml` to
   https://technaom.github.io/mcp-for-everyone/. `assets/chapters-data.js`
@@ -97,7 +113,9 @@ this file won't be as fresh as that one. What exists:
   `.your-class p, .your-class li { color: inherit }` override, following
   `.hook`'s pattern in `style.css`.
 
-Chapters 7–13 don't exist yet.
+All 13 chapters exist. A full regression pass across every chapter's
+`exercises/solution.py` and `project/solution.py` (2026-08-09, after
+Chapter 13 shipped) confirms no tracebacks anywhere in the repo.
 
 ## Naming conventions
 
@@ -133,23 +151,28 @@ Chapters 7–13 don't exist yet.
 
 ## Current task
 
-Chapters 1–10 (Modules 1–5) are done and validated. Next: Module 6
-(Chapters 11–12, "Testing, Debugging & Observability" and "Versioning,
-Errors & Production Hardening") — see "Next Recommended Task" in
-`PROJECT_STATE.md` for specifics, including a suggested regression
-re-check of the asyncio-guard fix before adding new chapters.
+None — the course is complete. If you were pointed here to "continue
+building," check with the user before assuming there's more content
+work to do; there isn't, by design. See PROJECT_STATE.md's "Next
+Recommended Task" for the remaining optional polish items (CI,
+CONTRIBUTING.md, etc.) if that's what's actually being asked for.
 
 ## Next task after that
 
-Continue the Module 7 capstone (Chapter 13), following the curriculum
-map's build order — one module
-at a time, validated after each, per the master workflow. Don't
-mass-generate ahead of validation.
+N/A unless the user requests new content (e.g., expanding beyond 13
+chapters, which would be a deliberate scope-change decision to make
+explicitly, not a default next step) or polish work from
+PROJECT_STATE.md.
 
 ## Important architectural decisions (see PROJECT_STATE.md for full detail)
 
 1. MCP spec 2026-07-28 (stateless) is the taught baseline.
-2. 13 chapters, focused-topic sizing — do not expand without a strong
-   reason.
+2. 13 chapters, focused-topic sizing — the course is complete at this
+   size; don't expand without a strong, explicit reason from the user.
 3. Static site, no backend required for the default learning path.
 4. Repo structure mirrors existing TechNaom course repos exactly.
+5. Every code example in every chapter was run against the real `mcp`
+   SDK before being written into a lesson — this is the single most
+   load-bearing practice in this repo and caught real bugs repeatedly
+   (see "Current state" above for the full list). Do not relax this for
+   future edits, however small they seem.

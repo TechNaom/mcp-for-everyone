@@ -2,6 +2,12 @@
 
 Last updated: 2026-08-09
 
+## Status: Course Complete (13/13 chapters, 7/7 modules)
+
+Live at https://technaom.github.io/mcp-for-everyone/. See "Next
+Recommended Task" below for remaining polish work — none of it blocks
+the course from being usable end to end today.
+
 ## Course Objective
 
 Teach learners (beginner → architect) to build, secure, test, and
@@ -149,46 +155,78 @@ production-grade, interview-ready, original content only).
       files (Chapters 3, 6, 7, 8, 9, 10), verified every affected
       chapter's solutions still run correctly afterward.
 
-## Pending / Not Started
+- [x] Step 6 (Module 6): Chapters 11–12 built and validated, completing
+      Module 6. Chapter 11 formalized the ad hoc logging every prior
+      chapter built as needed into structured, trace-correlated logging
+      via the real `Context` API — and found a genuinely current fact by
+      testing: `ctx.info()`/`ctx.log()` are deprecated as of the exact
+      2026-07-28 spec this course teaches (SEP-2577), confirmed by a
+      live deprecation warning. Chapter 12 tested (not just described)
+      Chapter 3's compatibility matrix: connecting a real
+      `mode="legacy"` client to a modern `MCPServer` succeeded via a
+      genuine `initialize` handshake, proving every server in this
+      course has been dual-era by default all along. Wrote
+      `assessments/written-exams/module-6-exam.md`.
+- [x] Step 10 (Module 7 capstone): Chapter 13 built and validated —
+      Level 4 architecture challenge (design secure MCP infrastructure
+      for a regulated healthcare enterprise), with a tested reference
+      architecture combining namespacing/scoping/injection-scanning/
+      logging from Chapters 8–11, honestly documented gaps rather than
+      a fictional complete solution, a full ADR template, and
+      architecture-scenario interview questions matching the master
+      prompt's format. No written exam for Module 7 (capstone rubric
+      instead, per the curriculum map).
 
-- [ ] Step 6 continued: build Chapters 11–13 (Modules 6–7), module by
-      module, validating after each module.
-- [ ] Step 7: Build project implementations (L1–L4) and tests.
-- [ ] Step 8: Assessments — quizzes, written exams, interview questions,
-      architecture challenges (beyond what ships per-chapter).
-- [x] Step 9 (partial): Website shell live — root `index.html`,
-      `docs/curriculum/index.html` styled roadmap, GitHub Pages deploy
-      (`.github/workflows/pages.yml`, copied from `rag-for-everyone`
-      unmodified). Live at https://technaom.github.io/mcp-for-everyone/.
-      Still pending: MCP-specific interactive assets
-      (`message-flow.js`, `server-playground.js`, `permission-scoper.js`)
-      mentioned in `docs/course-architecture.md` — deferred until more
-      chapters exist to justify them.
-- [ ] Step 10: Capstone (Chapter 13 content + rubric doc).
-- [ ] Step 11: Interview layer polish across all chapters.
-- [ ] Step 12: Polish — tests, link validation, security scan, curriculum
-      consistency review, CI beyond Pages deploy (lint/test workflows).
+**All 13 chapters across all 7 modules are now complete, tested, and
+live.** Every chapter's code was installed and run against the real
+`mcp` SDK v2.0.0 before being written into a lesson. A full regression
+pass across every chapter's `exercises/solution.py` and
+`project/solution.py` (run 2026-08-09, after Chapter 13) confirms no
+tracebacks anywhere in the repo.
+
+## Pending / Not Started (polish only — no core content remains)
+
+- [x] Step 9 (mostly complete): Website shell live — root `index.html`,
+      `docs/curriculum/index.html` styled roadmap, GitHub Pages deploy.
+      Live at https://technaom.github.io/mcp-for-everyone/. Still
+      pending: MCP-specific interactive assets (`message-flow.js`,
+      `server-playground.js`, `permission-scoper.js`) mentioned in
+      `docs/course-architecture.md` — optional polish, not required for
+      the course to be complete and usable.
+- [ ] Step 12: Further polish — automated link-checking CI (currently
+      verified manually per chapter), a lint/test GitHub Actions
+      workflow beyond the existing Pages-deploy-only workflow, a
+      security scan pass.
 - [ ] `CONTRIBUTING.md`, `CHANGELOG.md`, `.env.example`,
-      `requirements.txt` — not yet written. (`LICENSE`/`LICENSE-CONTENT`
-      done, see Open Decisions.)
-- [ ] `docs/production-and-capstone-projects.md` — capstone rubric detail.
+      `requirements.txt` at the repo root — not yet written.
+      (`LICENSE`/`LICENSE-CONTENT` done, see Open Decisions.)
+- [ ] `docs/production-and-capstone-projects.md` — a standalone version
+      of the capstone rubric doc; the rubric currently lives inline in
+      Chapter 13's lesson, which is sufficient but a standalone doc
+      would match the original architecture plan.
+- [ ] Optional: revisit chapter interview-bank counts for full
+      uniformity — most chapters have 8, a couple could be reviewed for
+      consistency on a future polish pass.
 
 ## Known Issues
 
-- Chapters 3–4 reference forward to Chapters 6, 9, and 12, which don't
-  exist yet — links are plain text ("see Chapter 6"), not hyperlinks, so
-  nothing is broken, but re-verify the claims once those chapters are
-  written.
-- Chapter 3's exercises/project import Chapter 4's solution server via a
-  relative `sys.path` hack (`parents[2] / "chapter-04-.../exercises"`).
-  This is intentional (avoids duplicating the notes server a third time)
-  but it's a real coupling: if Chapter 4's `exercises/solution.py` moves
-  or its function signatures change, Chapter 3's code breaks silently
-  until someone runs it. Re-run Chapter 3's exercises/project any time
-  Chapter 4's exercises/solution.py changes.
+- Chapters 3–4's forward references (to Chapters 6, 9, 12) are now all
+  resolved — those chapters exist. The references are still plain text
+  ("see Chapter 6"), not hyperlinks; converting them to real links is
+  low-priority cosmetic polish, not a correctness issue.
+- Chapters 3, 5, 6, 7, 8, 9, and 10 import Chapter 4's (or each other's)
+  solution modules via `importlib.util.spec_from_file_location` — this
+  is intentional (avoids duplicating server code repeatedly) but is a
+  real coupling: if Chapter 4's `exercises/solution.py` or
+  `project/solution.py` function signatures ever change, every chapter
+  that imports it needs to be re-run. A 2026-08-09 full regression pass
+  confirms all imports currently resolve correctly.
 - Chapter 3's lesson worked-trace is labeled as "constructed from the
   spec's defined shapes," not a literal raw-byte packet capture — see
   Follow-Up Tasks in `quality-audits/chapter-03-audit.md`.
+- Chapter 13's capstone is intentionally open-ended with no single
+  correct answer — `quality-audits/chapter-13-audit.md` uses an adapted
+  rubric rather than the standard per-chapter checklist for this reason.
 
 ## Open Decisions
 
@@ -215,25 +253,38 @@ priority on depth over count).
 
 ## Next Recommended Task
 
-Module 6 (Chapters 11–12): "Testing, Debugging & Observability" and
-"Versioning, Errors & Production Hardening." Chapter 11 has a natural
-anchor already sitting in the codebase: every chapter's `is_error`
-discipline and Chapter 10's `ContentFirewall` logging pattern are
-half-built observability; formalize them (structured logging, a trace
-correlating a request across host → client → server, per Chapter 3's
-OpenTelemetry `_meta` fields) rather than inventing new examples from
-scratch. Chapter 12 should concretely exercise the modern/legacy
-version-mismatch handling Chapter 3 described in the abstract (the
-`server/discover` probe pattern, `UnsupportedProtocolVersionError`) —
-no chapter has actually built version-compatibility-handling code yet,
-only described the spec's rules for it. Test everything against the
-real SDK before writing it into a lesson. Validate each with a fresh
-`quality-audits/chapter-0N-audit.md`, write the Module 6 exam once both
-chapters are done, before moving to the Module 7 capstone (Chapter 13).
+**The core course is done.** All 13 chapters, 6 module exams, and the
+capstone are built, tested, and live. What's left is optional polish,
+roughly in priority order:
 
-**Before starting new chapters**, run a quick regression check: since
-Chapter 10's fix touched 17 files across 6 chapters, re-run each
-chapter's `exercises/solution.py` and `project/solution.py` once more if
-picking this up in a new session, to confirm nothing regressed between
-sessions (see the Module 5 completion entry above for the exact fix and
-file list).
+1. **`CONTRIBUTING.md` and `CHANGELOG.md`** — the master prompt expects
+   these at the repo root; neither exists yet. `CHANGELOG.md` should
+   probably start from this build (2026-08-09) rather than try to
+   reconstruct history.
+2. **Automated CI beyond Pages deploy** — a GitHub Actions workflow that
+   runs `python -m py_compile` across `chapters/**/*.py` and a basic
+   HTML link-checker on every push, so the manual regression passes
+   done throughout this build become automatic. This is the single
+   highest-leverage remaining task, given how many real bugs manual
+   testing caught — codifying that testing into CI protects it going
+   forward.
+3. **`docs/production-and-capstone-projects.md`** — pull Chapter 13's
+   inline rubric into a standalone doc, matching the original
+   architecture plan (optional; the inline version is complete and
+   usable as-is).
+4. **MCP-specific interactive assets** (`message-flow.js`,
+   `server-playground.js`, `permission-scoper.js`) mentioned in
+   `docs/course-architecture.md` — genuinely optional; the static
+   lesson content doesn't need them to be complete.
+5. **Cross-repo**: consider backfilling `PROJECT_STATE.md`/`AI_HANDOFF.md`
+   into `python-for-everyone`, `genai-for-everyone`, `rag-for-everyone`,
+   `devops-for-everyone` per the user's standing instruction (see
+   `[[feedback-project-state-ai-handoff-files]]` in the assistant's
+   memory system, if picking this up as a fresh session with memory
+   access) — not started, out of scope for this repo alone.
+
+If resuming this repo cold in a new session: run the regression check
+from `AI_HANDOFF.md`'s "Current state" section before assuming anything
+still works — SDK point releases could change behavior this course's
+lessons depend on (the SDK is young and moves fast, per Chapter 6 and
+12's own findings about default-behavior surprises).
