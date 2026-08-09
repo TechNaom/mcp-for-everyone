@@ -45,33 +45,46 @@ this file won't be as fresh as that one. What exists:
 - `templates/` and `assets/{style.css,sidebar.js,progress.js,quiz-engine.js,chapters-data.js}`
   copied from `rag-for-everyone` and rebranded (structure only), plus the
   full 13-chapter roster wired into `chapters-data.js` for sidebar nav
-- **Chapters 1–4 are fully built and validated** — same page set each:
-  `lesson.html`, `quiz.html`, `interview-questions.html`,
+- **Chapters 1–6 (Modules 1–3) are fully built and validated** — same
+  page set each: `lesson.html`, `quiz.html`, `interview-questions.html`,
   `exercises/{index.html,starter.py,solution.py or reasoning tasks}`,
   `practice/index.html`, `project/{index.html,...}`. Every Python example
-  across all four chapters was installed and run against the real `mcp`
-  SDK v2.0.0 before being written into a lesson — do not add new code
-  examples to this course from memory; install `mcp[cli]` in a scratch
-  venv and run them first. This discipline has caught real bugs three
-  separate times so far: Chapter 4's silent type-widening and
-  URI-template `://` collision, and Chapter 3's wrong assumption that
-  calling a nonexistent tool raises a Python exception (it doesn't — see
-  `chapters/chapter-03-the-mcp-message-lifecycle/project/solution.py`).
-  Chapters 1–2 are conceptual (no code, per the curriculum map) with
-  written-memo/diagram projects instead. Chapter 3's exercises/project
-  import Chapter 4's solution server via `sys.path` rather than
-  duplicating it — if you ever change Chapter 4's
-  `exercises/solution.py` function signatures, re-run Chapter 3's code.
-  Audits: `quality-audits/chapter-0{1,2,3,4}-audit.md`.
+  was installed and run against the real `mcp` SDK v2.0.0 before being
+  written into a lesson — do not add new code examples to this course
+  from memory; install `mcp[cli]` in a scratch venv and run them first.
+  This discipline has caught real, non-obvious SDK behavior repeatedly:
+  Chapter 4's silent type-widening and URI-template `://` collision;
+  Chapter 3's wrong assumption that calling a nonexistent tool raises a
+  Python exception (it doesn't); Chapter 5's `list_resources()` vs.
+  `list_resource_templates()` split; Chapter 6's `stateless_http`
+  defaulting to `False` even under the "stateless" spec. Chapters 1–2 are
+  conceptual (no code, per the curriculum map) with written-memo/diagram
+  projects instead. Chapters 3, 5, and 6 all reuse Chapter 4's
+  `solution.py` via `importlib.util.spec_from_file_location` (NOT a
+  `sys.path` + `import solution` trick — that broke depending on
+  invocation method since multiple files share the name `solution.py`;
+  see any of those files' `_load_chapter_4_module()` docstring for why).
+  If you ever change Chapter 4's `exercises/solution.py` or
+  `project/solution.py` function signatures, re-run every chapter that
+  imports it. Audits: `quality-audits/chapter-0{1..6}-audit.md`.
 - **Root website is live**: `index.html`, `docs/curriculum/index.html`
   (styled roadmap), deployed via `.github/workflows/pages.yml` to
   https://technaom.github.io/mcp-for-everyone/. `assets/chapters-data.js`
   is the single source of truth for what's "live" — a chapter needs a
-  `path` field to render as a link; omitting `path` renders it as a
-  non-linked "planned" card in both the sidebar and home page. Don't add
-  a placeholder `path` for an unbuilt chapter, it will 404.
+  `path` field to render as a link; a module needs a real `examPath` to
+  link its written exam. Omitting either renders as non-linked/hidden
+  rather than a link to a 404 — **this exact mistake shipped once**
+  (all 7 modules linked to exam files that didn't exist) and was reported
+  by the user as a live bug; don't repeat it for chapters or exams.
+- **CSS**: `color-scheme: light` is declared in `:root` — don't remove
+  it, it prevents browser/OS dark-mode auto-inversion from breaking card
+  contrast. The global `p, li { color: var(--color-text) }` rule beats
+  inherited text color from any dark-background ancestor (like `.hook`)
+  — any new dark callout box that contains `<p>`/`<li>` needs its own
+  `.your-class p, .your-class li { color: inherit }` override, following
+  `.hook`'s pattern in `style.css`.
 
-Chapters 5–13 don't exist yet.
+Chapters 7–13 don't exist yet.
 
 ## Naming conventions
 
@@ -107,18 +120,21 @@ Chapters 5–13 don't exist yet.
 
 ## Current task
 
-Chapters 1–4 are done and validated. Next: Module 3 (Chapters 5–6,
-"Resources & Prompts" and "Transports: stdio vs. Streamable HTTP") — see
-"Next Recommended Task" in `PROJECT_STATE.md` for specifics, including
-that Chapter 6 needs the Streamable HTTP transport actually exercised
-with real code, not just described.
+Chapters 1–6 (Modules 1–3) are done and validated. Next: Module 4
+(Chapters 7–8, "Building an MCP Client/Host" and "Connecting Multiple
+Servers to One Agent") — see "Next Recommended Task" in
+`PROJECT_STATE.md` for specifics, including that Chapter 7 needs an
+actual host loop built (no prior chapter has built the host side) and
+Chapter 8 needs a real tool-name collision resolved across two live
+servers.
 
 ## Next task after that
 
-Continue Module 4 (Chapters 7–8), then Module 5 (9–10, security — this
-course's core differentiator), following the curriculum map's build
-order — one module at a time, validated after each, per the master
-workflow. Don't mass-generate ahead of validation.
+Continue Module 5 (Chapters 9–10, security — this course's stated core
+differentiator), then Module 6 (11–12), then the Module 7 capstone
+(Chapter 13), following the curriculum map's build order — one module
+at a time, validated after each, per the master workflow. Don't
+mass-generate ahead of validation.
 
 ## Important architectural decisions (see PROJECT_STATE.md for full detail)
 

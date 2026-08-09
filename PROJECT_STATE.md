@@ -73,19 +73,56 @@ production-grade, interview-ready, original content only).
       message shape, the full modern/legacy compatibility matrix, and
       the `_meta` field table in the lesson were fetched directly from
       the official 2026-07-28 spec pages on modelcontextprotocol.io, not
-      recalled from memory. Chapter 3's exercises and project reuse the
-      Chapter 4 notes server (via `sys.path` import from
-      `chapters/chapter-04-your-first-mcp-server/exercises/solution.py`)
-      and were run against the real SDK — this caught a wrong assumption
-      in the project's first draft (that calling a nonexistent tool
-      raises a Python exception; it actually returns a normal
-      `is_error=True` result, same as any other tool failure), corrected
-      before shipping. All 4 live chapters' interview banks now have 8
-      questions each (2 per level), matching the course's stated floor.
+      recalled from memory.
+- [x] Step 6 (Module 3): Chapters 5–6 built and validated, completing
+      Module 3. Chapter 5 (Resources & Prompts) found and documented a
+      real SDK behavior: `list_resources()` and `list_resource_templates()`
+      are separate calls, and a client checking only the former silently
+      can't discover templated resources — this became the chapter's
+      production scenario. Chapter 6 (Transports) found a bigger one:
+      `mcp.run(transport="streamable-http", ...)`'s `stateless_http`
+      parameter defaults to `False`, so a fresh Streamable HTTP server
+      rejects unauthenticated raw requests with a 400 ("Missing session
+      ID") even though the 2026-07-28 spec's headline feature is
+      statelessness — found by inspecting the installed SDK's actual
+      function signature and confirmed with live curl requests on two
+      ports. Wrote `assessments/written-exams/module-3-exam.md`.
+      All 6 live chapters' interview banks have 8 questions each.
+- [x] Fixed a site-wide bug (reported by user, 2026-08-09): every
+      chapter sidebar linked to `assessments/written-exams/module-N-exam.md`
+      for all 7 modules, but those files didn't exist yet — 404 on every
+      chapter page. Wrote real exams for Modules 1–2 (the modules with
+      complete chapters at the time), set `examPath: null` for modules
+      whose exams don't exist yet (now the enforced convention, see
+      `assets/chapters-data.js`'s header comment), and backfilled
+      Module 3's exam/examPath once Chapter 6 completed that module.
+- [x] Fixed a latent robustness bug (found while building Chapter 5):
+      Chapter 3's and Chapter 5's exercises/project files import Chapter
+      4's `solution.py` via a `sys.path.insert` + `import solution`
+      trick that only works when the importing file is run directly as
+      `python solution.py` — both files share the name `solution.py`, so
+      importing by name (`python -c "import solution"`, or a test runner)
+      triggers a circular self-import instead. Replaced with
+      `importlib.util.spec_from_file_location` everywhere this pattern
+      is used, verified under both invocation styles.
+- [x] Fixed two CSS bugs (reported by user, 2026-08-09), both live-site
+      readability issues: (1) missing `color-scheme: light` allowed
+      browser/OS dark-mode auto-inversion to mismatch card backgrounds
+      against unchanged text color; (2) the global `p, li { color:
+      var(--color-text) }` rule overrides inherited white text inside
+      `.hook` (every chapter's opening callout), since a rule matching an
+      element directly always beats an inherited value from an ancestor
+      regardless of the ancestor's specificity — fixed with an explicit
+      `.hook p, .hook li { color: inherit }` override. Also raised
+      several translucent card backgrounds from ~60% to ~92% opacity so
+      the colorful gradient backdrop doesn't wash out text contrast, and
+      defined two classes (`.thinking-box`, `.lesson-card`) used in every
+      chapter's HTML but never actually defined in `style.css` — a gap
+      inherited unnoticed from `rag-for-everyone`'s template.
 
 ## Pending / Not Started
 
-- [ ] Step 6 continued: build Chapters 5–13 (Modules 3–7), module by
+- [ ] Step 6 continued: build Chapters 7–13 (Modules 4–7), module by
       module, validating after each module.
 - [ ] Step 7: Build project implementations (L1–L4) and tests.
 - [ ] Step 8: Assessments — quizzes, written exams, interview questions,
@@ -149,13 +186,16 @@ priority on depth over count).
 
 ## Next Recommended Task
 
-Module 3 (Chapters 5–6): "Resources & Prompts" and "Transports: stdio
-vs. Streamable HTTP." Chapter 5 can reuse the Chapter 4 notes server
-pattern for a prompts example (test against the real SDK, same
-discipline as Chapters 3–4). Chapter 6 needs the Streamable HTTP
-transport actually exercised (`mcp.run(transport="streamable-http")`
-plus a real HTTP client call), not just described — Chapter 4's cheat
-sheet already names this transport but no chapter has run it yet. This
-is also the chapter where the stateful/stateless compatibility callout
-promised in Chapter 3 needs to land concretely. Validate each with a
-fresh `quality-audits/chapter-0N-audit.md` before moving to Module 4.
+Module 4 (Chapters 7–8): "Building an MCP Client/Host" and "Connecting
+Multiple Servers to One Agent." Chapter 7 should build an actual host
+loop — connect a client to a server, list tools, and drive a (mocked or
+simple rule-based) decision about which tool to call, since no prior
+chapter has built the *host* side, only servers and raw clients. Chapter
+8 needs at least two live servers connected simultaneously from one
+host process, with a real tool-name collision to resolve (per Chapter
+2's Q3/Q7 interview questions, which already promised this would be
+covered). Test everything against the real SDK before writing it into a
+lesson, same discipline as every chapter so far. Validate each with a
+fresh `quality-audits/chapter-0N-audit.md`, write the Module 4 exam once
+both chapters are done, before moving to Module 5 (security — this
+course's stated differentiator).
