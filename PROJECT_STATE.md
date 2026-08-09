@@ -72,16 +72,21 @@ production-grade, interview-ready, original content only).
 - [ ] Step 7: Build project implementations (L1–L4) and tests.
 - [ ] Step 8: Assessments — quizzes, written exams, interview questions,
       architecture challenges (beyond what ships per-chapter).
-- [ ] Step 9: Website — root `index.html`, `docs/curriculum/index.html`
-      styled roadmap, MCP-specific interactive assets
-      (`message-flow.js`, `server-playground.js`, `permission-scoper.js`).
+- [x] Step 9 (partial): Website shell live — root `index.html`,
+      `docs/curriculum/index.html` styled roadmap, GitHub Pages deploy
+      (`.github/workflows/pages.yml`, copied from `rag-for-everyone`
+      unmodified). Live at https://technaom.github.io/mcp-for-everyone/.
+      Still pending: MCP-specific interactive assets
+      (`message-flow.js`, `server-playground.js`, `permission-scoper.js`)
+      mentioned in `docs/course-architecture.md` — deferred until more
+      chapters exist to justify them.
 - [ ] Step 10: Capstone (Chapter 13 content + rubric doc).
 - [ ] Step 11: Interview layer polish across all chapters.
 - [ ] Step 12: Polish — tests, link validation, security scan, curriculum
-      consistency review, CI (GitHub Actions).
-- [ ] `.github/workflows/` CI (lint, tests, link check) — not yet written.
-- [ ] `CONTRIBUTING.md`, `CHANGELOG.md`, `LICENSE`, `.env.example`,
-      `requirements.txt` — not yet written.
+      consistency review, CI beyond Pages deploy (lint/test workflows).
+- [ ] `CONTRIBUTING.md`, `CHANGELOG.md`, `.env.example`,
+      `requirements.txt` — not yet written. (`LICENSE`/`LICENSE-CONTENT`
+      done, see Open Decisions.)
 - [ ] `docs/production-and-capstone-projects.md` — capstone rubric detail.
 
 ## Known Issues

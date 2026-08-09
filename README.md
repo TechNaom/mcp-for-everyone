@@ -6,7 +6,6 @@ exercises, evaluation practice, interview prep, and portfolio projects.
 
 🔗 **Repo:** <https://github.com/TechNaom/mcp-for-everyone>
 🔗 **Live UI:** <https://technaom.github.io/mcp-for-everyone/>
-*(GitHub Pages not yet enabled — no root `index.html` yet, see `PROJECT_STATE.md`)*
 
 This course follows the same philosophy as `python-for-everyone` and
 `rag-for-everyone`:
