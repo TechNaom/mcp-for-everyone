@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Versioning, Errors & Production Hardening Project — MCP for Everyone</title>
+<meta name="description" content="Project: a dual-era behavior-parity checker that catches real cross-version regressions.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-12">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../interview-questions.html">&larr; Back to interview questions</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 12 Project</span>
+    <span class="reading-time">~35 min · Level 2, Assisted</span>
+  </div>
+  <h1>Build a Dual-Era Behavior-Parity Checker</h1>
+  <p>The exact test this chapter's senior interview question described
+  — built, and proven to actually catch a real mismatch, not just
+  report "PASS" trivially.</p>
+
+  <div class="hook">
+    <p>
+      Runs the same tool calls against a server under both
+      <code>mode="auto"</code> (modern) and <code>mode="legacy"</code>,
+      and flags any call whose result differs — this chapter's central
+      finding (dual-era support is automatic, behavior parity is not)
+      made into a reusable regression test.
+    </p>
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <h2>Build it</h2>
+  <p>
+    Implement <code>run_calls</code> (execute a list of tool calls,
+    recording results) and <code>check_parity</code> (run the same
+    calls under both eras and compare). Test against Chapter 12's
+    exercises server, which behaves identically across eras — you
+    should see a clean PASS.
+  </p>
+
+  <div class="what-is">
+    <span class="label">Verification</span>
+    <pre><code>python solution.py</code></pre>
+    Expect: <code>PASS: identical behavior across modern and legacy eras.</code>
+  </div>
+
+  <div class="what-is">
+    <span class="label">Extension challenge — prove it actually works</span>
+    Write a small, deliberately buggy server whose tool returns a
+    different value on each call (e.g. an internal counter). Run your
+    checker against it and confirm it correctly reports a mismatch —
+    don't just trust that your checker passes when it should; confirm
+    it fails when it should too, the same discipline used throughout
+    this course.
+  </div>
+
+  <div class="points-to-remember">
+    <h2>Why this project matters</h2>
+    <p>
+      A parity checker that only ever reports PASS isn't actually
+      testing anything — the extension challenge exists specifically to
+      make sure you've built a real check, not a check that trivially
+      always succeeds. This mirrors exactly how this chapter's own
+      lesson content was validated while being written.
+    </p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../interview-questions.html">&larr; Interview Questions</a>
+    <a href="../../../index.html">All Chapters &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

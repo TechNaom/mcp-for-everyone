@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Versioning, Errors & Production Hardening Practice Bank — MCP for Everyone</title>
+<meta name="description" content="Practice bank for Versioning, Errors & Production Hardening.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-12">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../exercises/index.html">&larr; Back to exercises</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 12 Practice Bank</span>
+    <span class="reading-time">~20 min</span>
+  </div>
+  <h1>Practice Bank: Versioning, Errors & Production Hardening</h1>
+  <p>Operational judgment for shipping something that has to survive
+  contact with reality.</p>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Operations</span>
+    <h3>The upgrade that broke a partner</h3>
+    <p>Your team upgrades the MCP SDK, and a partner's legacy-mode
+    integration breaks. Using this chapter's proof that dual-era support
+    is a tested guarantee (not automatic forever), what should have been
+    in place before shipping the upgrade?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Support</span>
+    <h3>The vague error report</h3>
+    <p>A user says "it gave an error." Given that validation errors
+    include detailed pydantic messages, what does this suggest about
+    where in the host/client stack that detail is getting lost before
+    reaching the user or the support team?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Cost</span>
+    <h3>The retry storm</h3>
+    <p>A tool that depends on an external API starts failing, and naive
+    retry logic in the host causes a flood of repeated calls, worsening
+    the outage. What hardening pattern (beyond simple retries) would
+    prevent this?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Compliance</span>
+    <h3>The audit finding</h3>
+    <p>An audit finds that your team has no documented policy on which
+    MCP spec versions are supported, for how long. Using this chapter's
+    architect interview question on compatibility governance, what's the
+    minimum viable policy you'd draft first?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Debugging</span>
+    <h3>The bug that only appears in legacy mode</h3>
+    <p>A bug report can't be reproduced with the default SDK client.
+    Given this chapter's central finding, what's the very first thing
+    you'd try before concluding the report is invalid?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Eval</span>
+    <h3>The missing dependency-failure test</h3>
+    <p>A team's test suite covers valid inputs and invalid inputs
+    thoroughly, but has zero tests simulating a downstream dependency
+    being unavailable. What's the risk of this gap, and how would you
+    prioritize closing it against other test debt?</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../exercises/index.html">&larr; Exercises</a>
+    <a href="../interview-questions.html">Interview Questions &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

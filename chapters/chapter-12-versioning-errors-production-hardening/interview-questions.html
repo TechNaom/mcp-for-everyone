@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Versioning, Errors & Production Hardening Interview Questions — MCP for Everyone</title>
+<meta name="description" content="Interview questions for Versioning, Errors & Production Hardening.">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-12">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="practice/index.html">&larr; Back to practice bank</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 12 Interview Questions</span>
+    <span class="reading-time">~15 min</span>
+  </div>
+  <h1>Interview Questions: Versioning, Errors & Production Hardening</h1>
+  <p>Grouped by level. Each includes a strong answer, a red flag, and a follow-up.</p>
+
+  <div class="lesson-card">
+    <h2>1. (Beginner) Does an MCP server need extra code to support both the modern and legacy spec?</h2>
+    <p><strong>Strong answer:</strong> No — confirmed by testing, the reference Python SDK's server is dual-era by default; it accepts both a modern stateless connection and a legacy initialize-handshake connection without any extra code from the server author.</p>
+    <p><strong>Red flag:</strong> Assumes dual-era support requires writing custom version-detection code from scratch.</p>
+    <p><strong>Follow-up:</strong> "What would you need to do if you actually wanted to reject legacy connections?"</p>
+    <p><strong>What this proves:</strong> Knows the SDK's actual default behavior, not an assumption from the spec's philosophy alone.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>2. (Beginner) Where do argument validation errors come from, and what do they look like?</h2>
+    <p><strong>Strong answer:</strong> Generated automatically from a tool's type hints via pydantic — a missing or wrong-typed argument produces a detailed, specific error message, returned as a normal is_error=True result, the same mechanism as any other tool failure in this course.</p>
+    <p><strong>Red flag:</strong> Thinks validation needs to be manually implemented inside every tool function.</p>
+    <p><strong>Follow-up:</strong> "What's the trade-off of showing this detailed pydantic error directly to an end user versus a generic message?"</p>
+    <p><strong>What this proves:</strong> Understands where "free" validation comes from and its actual shape.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>3. (Intermediate) A server accepts legacy clients without complaint. Does this guarantee it behaves identically for modern and legacy callers?</h2>
+    <p><strong>Strong answer:</strong> No — per this chapter's production scenario, "accepts the connection" and "behaves identically" are different guarantees. Code paths that differ based on connection era (even subtly, in an internal helper) can produce different behavior that only surfaces when someone actually exercises the legacy path — which default testing (using the SDK's modern-mode client) won't catch.</p>
+    <p><strong>Red flag:</strong> Conflates "connects successfully" with "behaves correctly" for both eras.</p>
+    <p><strong>Follow-up:</strong> "How would you write a test that specifically catches an era-dependent behavior difference?"</p>
+    <p><strong>What this proves:</strong> Distinguishes connectivity from correctness — a subtle but important production distinction.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>4. (Intermediate) Why should a tool catch a dependency failure (e.g. a database being down) separately from relying on schema validation?</h2>
+    <p><strong>Strong answer:</strong> Schema validation only catches malformed input before a tool runs — it can't catch a failure that happens during execution, like a downstream service being unreachable. A tool needs its own error handling (try/except around the dependency call) to convert that failure into a clean is_error result, rather than letting an unhandled exception potentially crash the server process or produce an unhelpful raw traceback.</p>
+    <p><strong>Red flag:</strong> Assumes type-hint validation is sufficient protection against all failure modes.</p>
+    <p><strong>Follow-up:</strong> "What's the difference in how a host should react to a validation failure versus a dependency failure?"</p>
+    <p><strong>What this proves:</strong> Separates distinct failure categories requiring distinct handling, not a one-size-fits-all error strategy.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>5. (Senior) Design a test suite that would have caught this chapter's production scenario (an era-dependent behavior bug) before it shipped.</h2>
+    <p><strong>Strong answer:</strong> Run the full integration test suite twice — once with the default (modern, `mode="auto"`) client, once with `mode="legacy"` — asserting identical results for the same inputs across both. This directly targets behavior-parity, not just connectivity, and would have caught the exact bug (a resource returning different content shape depending on connection era) that slipped through modern-only testing.</p>
+    <p><strong>Red flag:</strong> Proposes only testing connectivity ("does the legacy client connect successfully") rather than behavior parity.</p>
+    <p><strong>Follow-up:</strong> "Would you run this dual-mode test suite on every CI run, or only periodically? What's the trade-off?"</p>
+    <p><strong>What this proves:</strong> Designs tests around the actual failure mode discovered, not a generic "test more" answer.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>6. (Senior) How would you decide when it's safe to stop supporting legacy-era clients for a given server?</h2>
+    <p><strong>Strong answer:</strong> Requires actual usage data — logging (per Chapter 11) which protocol era each connection negotiates, then tracking that metric over time. Only once legacy-era traffic is genuinely negligible (and ideally after proactively notifying any known remaining legacy consumers) does dropping support become low-risk. Deciding based on assumption rather than measured traffic risks breaking real, still-active consumers.</p>
+    <p><strong>Red flag:</strong> Proposes a fixed timeline ("drop legacy support after 6 months") with no connection to actual measured usage.</p>
+    <p><strong>Follow-up:</strong> "What would you log, specifically, to make this decision data-driven?" (connects back to Chapter 11's structured logging pattern)</p>
+    <p><strong>What this proves:</strong> Connects a versioning decision to the observability infrastructure from the previous chapter, rather than treating it in isolation.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>7. (Architect) Design the production-hardening checklist a new MCP server must pass before your org allows it to go live.</h2>
+    <p><strong>Strong answer:</strong> Drawing on this course's chapters: (1) tool-level error handling for dependency failures, not just relying on schema validation (this chapter); (2) timeouts on all external calls (Chapter 6); (3) structured, trace-correlated logging for every call (Chapter 11); (4) scope checks on every tool, verified by an audit tool (Chapter 9); (5) dual-era test coverage, not just modern-mode (this chapter); (6) a health-check endpoint exercising a real tool call, not just a port check (Chapter 6). A checklist assembled from prior chapters' concrete patterns, not invented from scratch, since each represents a real failure mode this course demonstrated.</p>
+    <p><strong>Red flag:</strong> Proposes a generic, abstract checklist disconnected from the concrete failure modes this course actually demonstrated.</p>
+    <p><strong>Follow-up:</strong> "Which of these would you make a hard gate (blocks deployment) versus a soft recommendation?"</p>
+    <p><strong>What this proves:</strong> Synthesizes the entire course's production lessons into one coherent operating checklist — the kind of integration architect-level candidates are expected to demonstrate.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>8. (Architect) A regulator asks how your organization ensures MCP servers remain compatible as the spec evolves. What's your answer?</h2>
+    <p><strong>Strong answer:</strong> Point to concrete, demonstrable practices: automated dual-era (or multi-era, as future spec revisions arrive) test coverage in CI: pinned SDK versions with a deliberate, tested upgrade process rather than silent auto-updates; monitoring (per Chapter 11) of which protocol eras are actually in use in production, informing deprecation timelines with data rather than guesswork; and a documented compatibility policy (which versions are supported, for how long) that's actually enforced by the test suite, not just written down. This turns "we handle compatibility" from a claim into something auditable.</p>
+    <p><strong>Red flag:</strong> Gives a vague assurance ("we test our software") without concrete, auditable practices tied to spec versioning specifically.</p>
+    <p><strong>Follow-up:</strong> "How would this policy need to change if the MCP spec introduced a breaking change with a shorter deprecation window than usual?"</p>
+    <p><strong>What this proves:</strong> Can articulate an auditable, evidence-based compatibility governance story — exactly what a regulator or enterprise customer needs to hear, not just "we're careful."</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="practice/index.html">&larr; Practice Bank</a>
+    <a href="project/index.html">Build the Project &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

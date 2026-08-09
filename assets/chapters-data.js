@@ -201,7 +201,7 @@ window.MFE_MODULES = [
   {
     title: "Module 6 — Production MCP",
     summary: "What changes between a demo server and one that survives production.",
-    examPath: null, /* written when Module 6's chapters are complete */
+    examPath: "assessments/written-exams/module-6-exam.md",
     chapters: [
       {
         id: "chapter-11",
@@ -222,7 +222,16 @@ window.MFE_MODULES = [
         id: "chapter-12",
         num: 12,
         title: "Versioning, Errors & Production Hardening",
-        description: "Spec-version compatibility and graceful degradation."
+        path: "chapters/chapter-12-versioning-errors-production-hardening/lesson.html",
+        description: "Real, tested proof that the SDK serves both modern and legacy clients simultaneously, plus a hardened error-handling pattern.",
+        subtopics: [
+          { id: "hook", title: "What Chapter 3 promised, tested for real" },
+          { id: "dual-era-proof", title: "Proof: the SDK is dual-era by default" },
+          { id: "what-this-means", title: "What this means for you" },
+          { id: "error-hardening", title: "Build: hardening against bad input" },
+          { id: "graceful-degradation", title: "Graceful degradation beyond validation" },
+          { id: "recap", title: "Points to remember" }
+        ]
       }
     ]
   },

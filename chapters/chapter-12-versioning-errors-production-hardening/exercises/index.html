@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Versioning, Errors & Production Hardening Exercises — MCP for Everyone</title>
+<meta name="description" content="Hands-on exercises for Versioning, Errors & Production Hardening.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-12">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../quiz.html">&larr; Back to the quiz</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 12 Exercises</span>
+    <span class="reading-time">~25 min</span>
+  </div>
+  <h1>Exercises: Versioning, Errors & Production Hardening</h1>
+  <p>Confirm dual-era behavior yourself, then harden a tool against a
+  simulated dependency failure.</p>
+
+  <div class="what-is">
+    <span class="label">How to run these</span>
+    <pre><code>pip install "mcp[cli]"
+cd chapters/chapter-12-versioning-errors-production-hardening/exercises
+python solution.py   # or fill starter.py first</code></pre>
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">1</span> (Production-gear) Simulate a dependency failure</h3>
+    <p>Implement <code>fetch_user_count</code> per TODO 1, raising a
+    clear error when <code>_SIMULATE_DB_DOWN</code> is True.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">2</span> Confirm dual-era support yourself</h3>
+    <p>Implement <code>confirm_dual_era</code> per TODO 2. Confirm the
+    two protocol versions differ, exactly as the lesson showed.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">3</span> (Production-gear) Confirm validation errors</h3>
+    <p>Implement <code>confirm_validation_errors</code> per TODO 3.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">4</span> (Production-gear) Confirm dependency-failure handling</h3>
+    <p>Implement <code>confirm_dependency_failure</code> per TODO 4.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">5</span> Test behavior parity across eras</h3>
+    <p>Call <code>add</code> with the same valid arguments under both
+    <code>mode="auto"</code> and <code>mode="legacy"</code>. Confirm the
+    result is identical — this is exactly the behavior-parity test this
+    chapter's senior interview question described.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">6</span> (Production-gear) Add a timeout-protected tool</h3>
+    <p>Add a tool that simulates a slow dependency (use
+    <code>time.sleep</code> briefly inside it), then write a client-side
+    call wrapped in <code>asyncio.wait_for</code> with a short timeout,
+    per Chapter 6's pattern. Confirm the timeout actually triggers.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../quiz.html">&larr; Back to Quiz</a>
+    <a href="../practice/index.html">Practice Bank &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

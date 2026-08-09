@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Versioning, Errors & Production Hardening — MCP for Everyone</title>
+<meta name="description" content="Real, tested proof that the SDK serves both modern and legacy clients simultaneously, plus a hardened error-handling pattern.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-12">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../../index.html">&larr; Back to all chapters</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 12</span>
+    <span class="badge-difficulty">Advanced</span>
+    <span class="reading-time">~35 min</span>
+  </div>
+
+  <h1>Versioning, Errors & Production Hardening</h1>
+  <p class="lede">
+    Chapter 3 described the modern/legacy compatibility story from the
+    spec. This chapter actually connects a legacy-mode client to a
+    modern server and shows you exactly what happens — plus the error
+    patterns you need to harden a server against before it ships.
+  </p>
+
+  <nav class="page-toc" aria-label="On this page">
+    <span class="toc-label">On this page</span>
+    <a href="#hook">1. What Chapter 3 promised, tested for real</a>
+    <a href="#dual-era-proof">2. Proof: the SDK is dual-era by default</a>
+    <a href="#what-this-means">3. What "dual-era by default" means for you</a>
+    <a href="#error-hardening">4. Build: hardening against bad input</a>
+    <a href="#graceful-degradation">5. Graceful degradation beyond validation</a>
+    <a href="#production">6. Production scenario: the client nobody tested against</a>
+    <a href="#mistakes">7. Common mistakes</a>
+    <a href="#thought-process">8. Builder thought process</a>
+    <a href="#recap">9. Points to remember</a>
+    <a href="#cheat-sheet">10. Cheat sheet</a>
+  </nav>
+
+  <div class="hook" id="hook">
+    <p>
+      Chapter 3 laid out the compatibility matrix from the spec:
+      modern client + legacy server fails, legacy client + dual-era
+      server works, and so on — all sourced from the specification
+      text. This chapter closes the loop by actually connecting a
+      legacy-mode client to the real servers this course has been
+      building, and reading what genuinely happens on the wire.
+    </p>
+  </div>
+
+  <section id="dual-era-proof" class="subtopic">
+    <h2>Proof: The SDK Is Dual-Era By Default</h2>
+    <p>
+      The Python SDK's <code>Client</code> accepts a <code>mode</code>
+      parameter — <code>"auto"</code> (default) or <code>"legacy"</code>,
+      forcing a real <code>initialize</code>/<code>initialized</code>
+      handshake instead of the modern stateless flow. Connecting both
+      modes to the exact same <code>MCPServer</code> instance:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">dual_era_test.py</span>
+      </div>
+      <pre><code>async with Client(mcp, mode="auto") as client:
+    print("auto mode:", client.protocol_version)
+
+async with Client(mcp, mode="legacy") as client:
+    print("legacy mode:", client.protocol_version)</code></pre>
+    </div>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">output</span>
+      </div>
+      <pre><code>auto mode protocol_version: 2026-07-28
+legacy mode protocol_version: 2025-11-25</code></pre>
+    </div>
+    <p>
+      Both succeed. Debug logging on the legacy-mode connection shows a
+      real <code>notifications/initialized</code> exchange — the actual
+      legacy handshake, not a simulation. The same server, with zero
+      extra code from you, correctly serves a caller that only knows the
+      old spec and a caller that speaks the new one.
+    </p>
+  </section>
+
+  <section id="what-this-means" class="subtopic">
+    <h2>What "Dual-Era by Default" Means for You</h2>
+    <p>
+      Chapter 3's compatibility matrix has a row for exactly this:
+      "Legacy client, Dual-era server → Works." Every server built in
+      this course, without anyone writing version-handling code, is
+      already a dual-era server, because that's the SDK's default
+      behavior. This is genuinely good news — but it comes with a
+      responsibility: <strong>you can't assume every caller speaks the
+      version you tested against</strong>, because the server itself
+      doesn't enforce one. A caller you've never tested with (an older
+      client library, a partner's legacy tooling) can connect
+      successfully and get served — which is great for compatibility,
+      and also means your testing needs to cover both eras if you care
+      about behavior parity between them, not just "does it connect."
+    </p>
+  </section>
+
+  <section id="error-hardening" class="subtopic">
+    <h2>Build: Hardening Against Bad Input</h2>
+    <p>
+      Version handling is one axis of production readiness; input
+      validation is another. Every tool's type hints already generate
+      real validation — tested against missing and wrong-typed arguments:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">terminal — missing argument</span>
+      </div>
+      <pre><code>await client.call_tool("add", {"a": 1})  # missing 'b'
+# is_error: True
+# "1 validation error for addArguments
+#  b
+#    Field required [type=missing, input_value={'a': 1}, input_type=dict]"</code></pre>
+    </div>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">terminal — wrong type</span>
+      </div>
+      <pre><code>await client.call_tool("add", {"a": "not a number", "b": 2})
+# is_error: True
+# "1 validation error for addArguments
+#  a
+#    Input should be a valid integer, unable to parse string as an integer"</code></pre>
+    </div>
+    <p>
+      This is free — the SDK generates this validation from your type
+      hints, no extra code required, and it surfaces through the exact
+      same <code>is_error=True</code> channel as every other failure in
+      this course. Production hardening here isn't about adding more
+      validation code; it's about making sure your host code actually
+      surfaces these detailed pydantic errors usefully to a user or log,
+      instead of just showing a generic "something went wrong."
+    </p>
+  </section>
+
+  <section id="graceful-degradation" class="subtopic">
+    <h2>Graceful Degradation Beyond Validation</h2>
+    <p>
+      Validation catches malformed requests. Production hardening also
+      means planning for failures validation can't catch:
+    </p>
+    <ul>
+      <li><strong>A dependency the tool relies on is down</strong> — a
+      database, an external API. The tool should catch this and return a
+      clear <code>is_error</code> result, not let an unhandled exception
+      propagate in a way that crashes the server process.</li>
+      <li><strong>A slow tool</strong> — per Chapter 6's health-check
+      project, wrap calls with a timeout rather than letting one slow
+      tool hang an entire request.</li>
+      <li><strong>An unrecognized protocol version</strong> — the spec
+      defines <code>UnsupportedProtocolVersionError</code> for exactly
+      this; a server should respond with a clear, structured error
+      naming its supported versions rather than failing ambiguously.</li>
+    </ul>
+  </section>
+
+  <section id="production" class="subtopic">
+    <h2>Production Scenario: The Client Nobody Tested Against</h2>
+    <p>
+      A platform team's integration tests only ever used the modern SDK
+      client (the default <code>mode="auto"</code>). A partner
+      integration, built against an older MCP client library, connected
+      successfully in production — the dual-era server accepted it
+      without complaint, exactly as this chapter's proof demonstrated —
+      but hit a subtle behavior difference: a resource that returned
+      slightly different content shape under the legacy code path (a
+      difference in how one internal helper handled the older request
+      format). Because the team's tests never exercised
+      <code>mode="legacy"</code>, this went unnoticed until the partner
+      reported it. The fix was two-fold: patch the actual code
+      difference, and — more durably — add legacy-mode test coverage
+      alongside modern-mode coverage for every server going forward,
+      treating dual-era support as a tested guarantee, not an assumed
+      side effect of the SDK's default behavior.
+    </p>
+  </section>
+
+  <section id="mistakes" class="subtopic">
+    <h2>Common Mistakes</h2>
+    <ul>
+      <li>Assuming "the SDK supports dual-era" means "my server's
+      behavior is identical across both eras" — per this chapter's
+      production scenario, it means the server accepts both, not that
+      no era-specific bugs can exist.</li>
+      <li>Testing only against the SDK's own default (modern) client
+      mode, never exercising <code>mode="legacy"</code>, even though the
+      server accepts and serves legacy clients in production.</li>
+      <li>Treating pydantic's validation error messages as something to
+      hide from users/logs rather than a genuinely useful, free
+      diagnostic — they're detailed and specific by default.</li>
+      <li>Not planning for dependency failures inside tools (a database
+      down, a timeout) separately from input validation — these are
+      different failure classes needing different handling.</li>
+    </ul>
+  </section>
+
+  <section id="thought-process" class="subtopic">
+    <h2>Builder Thought Process</h2>
+    <div class="thinking-box">
+      <p><strong>Problem:</strong> verify, rather than assume, what
+      actually happens when a legacy-mode client connects to a server
+      this course built using modern-only patterns.</p>
+      <p><strong>Assumption going in:</strong> per Chapter 3's
+      compatibility matrix, "modern client + legacy server" fails — so
+      a naive guess might be that legacy clients also struggle against
+      our servers.</p>
+      <p><strong>Test:</strong> connected a real <code>mode="legacy"</code>
+      client to the exact same <code>MCPServer</code> instance used
+      throughout this course.</p>
+      <p><strong>Observed result:</strong> succeeded, with a real
+      <code>initialize</code> handshake visible in debug logs — the
+      server is dual-era by default, matching a different row of
+      Chapter 3's matrix ("Legacy client, Dual-era server → Works") than
+      initially assumed.</p>
+      <p><strong>Decision:</strong> reframe the chapter around what this
+      actually means for testing practice (cover both eras, don't assume
+      parity) rather than around a hypothetical failure that testing
+      disproved.</p>
+    </div>
+  </section>
+
+  <section id="recap" class="subtopic">
+    <div class="points-to-remember">
+      <h2>Points To Remember</h2>
+      <ul>
+        <li>Every server in this course is dual-era by default — the
+        SDK serves both modern (2026-07-28) and legacy (2025-11-25)
+        clients without extra code, confirmed with a real legacy-mode
+        connection.</li>
+        <li>Dual-era support being automatic doesn't guarantee identical
+        behavior across both eras — test both, per this chapter's
+        production scenario.</li>
+        <li>Type-hint-driven validation is free and detailed (pydantic
+        error messages) — production hardening is about surfacing it
+        well, not adding more of it.</li>
+        <li>Plan separately for input validation failures, dependency
+        failures, slow tools, and version mismatches — each needs
+        different handling.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="cheat-sheet" class="subtopic">
+    <div class="what-is">
+      <span class="label">Cheat sheet</span>
+      <pre><code># Test both eras against the same server:
+async with Client(mcp, mode="auto") as c:    # modern, default
+    ...
+async with Client(mcp, mode="legacy") as c:  # forces initialize handshake
+    ...
+
+# Validation errors are free from type hints, come back as is_error=True
+# with detailed pydantic messages -- surface them, don't swallow them.
+
+# Harden separately against:
+#   - bad input          -> automatic via type hints
+#   - dependency failure  -> catch inside the tool, return clear is_error
+#   - slow tool           -> asyncio.wait_for with a timeout (Ch.6)
+#   - version mismatch    -> UnsupportedProtocolVersionError, name supported versions</code></pre>
+    </div>
+  </section>
+
+  <div class="what-is">
+    <span class="label">Interview questions (4 levels)</span>
+    See <a href="interview-questions.html">Chapter 12 interview questions</a>.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../../index.html">&larr; All Chapters</a>
+    <a href="quiz.html">Take the Quiz &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+    <span><a href="https://github.com/technaom/mcp-for-everyone">github.com/technaom/mcp-for-everyone</a></span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>
