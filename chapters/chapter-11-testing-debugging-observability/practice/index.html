@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testing, Debugging & Observability Practice Bank — MCP for Everyone</title>
+<meta name="description" content="Practice bank for Testing, Debugging & Observability.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-11">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../exercises/index.html">&larr; Back to exercises</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 11 Practice Bank</span>
+    <span class="reading-time">~20 min</span>
+  </div>
+  <h1>Practice Bank: Testing, Debugging & Observability</h1>
+  <p>Operational judgment for a capability that only proves its worth
+  during an incident.</p>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Operations</span>
+    <h3>The deprecated dependency</h3>
+    <p>A server built two years ago relies heavily on
+    <code>ctx.info()</code> for its entire logging strategy. How would
+    you plan a migration to standard logging without a risky big-bang
+    rewrite?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Cost</span>
+    <h3>The logging bill</h3>
+    <p>A team logs every tool call's full arguments and results at high
+    volume, and their log aggregation bill triples. What would you cut
+    first, and what would you never cut regardless of cost?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Support</span>
+    <h3>The trace ID nobody propagated</h3>
+    <p>A user reports an issue. Support has a timestamp but no trace ID,
+    because the host never generated or propagated one. What's the
+    cheapest fix that would prevent this gap for the next incident?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Debugging</span>
+    <h3>The log that lied</h3>
+    <p>A structured log shows <code>is_error: false</code> for a call
+    the user insists failed. Given Chapter 4's lesson that a tool can
+    return a "successful" result containing wrong data, what's your
+    hypothesis, and how would logging alone not be enough to resolve it?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Compliance</span>
+    <h3>The retention question</h3>
+    <p>Legal asks how long tool-call logs (potentially containing user
+    data) should be retained. What factors would you weigh, and who
+    should actually own this decision?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Eval</span>
+    <h3>The metric nobody's watching</h3>
+    <p>A team has comprehensive structured logging but no dashboards or
+    alerts built on it — an incident happened and was only found from a
+    user complaint, days later, even though the logs clearly showed it.
+    What's missing beyond "having the logs"?</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../exercises/index.html">&larr; Exercises</a>
+    <a href="../interview-questions.html">Interview Questions &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

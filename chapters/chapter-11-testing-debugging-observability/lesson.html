@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testing, Debugging & Observability — MCP for Everyone</title>
+<meta name="description" content="Structured logging and trace correlation for MCP servers, using the real Context API -- including a current spec deprecation this course caught by testing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-11">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../../index.html">&larr; Back to all chapters</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 11</span>
+    <span class="badge-difficulty">Advanced</span>
+    <span class="reading-time">~35 min</span>
+  </div>
+
+  <h1>Testing, Debugging & Observability</h1>
+  <p class="lede">
+    Every chapter's <code>is_error</code> checks and Chapter 10's
+    firewall logging were pieces of observability, built as needed.
+    This chapter formalizes the pattern — and catches a real, current
+    spec deprecation along the way.
+  </p>
+
+  <nav class="page-toc" aria-label="On this page">
+    <span class="toc-label">On this page</span>
+    <a href="#hook">1. What "it's not working" actually means</a>
+    <a href="#the-context-object">2. Meet Context: the tool's window into the request</a>
+    <a href="#deprecated-logging">3. A real deprecation, found by testing</a>
+    <a href="#structured-logging">4. Build: structured logging with trace correlation</a>
+    <a href="#debugging-workflow">5. A debugging workflow that uses this</a>
+    <a href="#production">6. Production scenario: the incident with no trail</a>
+    <a href="#mistakes">7. Common mistakes</a>
+    <a href="#thought-process">8. Builder thought process</a>
+    <a href="#recap">9. Points to remember</a>
+    <a href="#cheat-sheet">10. Cheat sheet</a>
+  </nav>
+
+  <div class="hook" id="hook">
+    <p>
+      "It's not working" has meant something different in almost every
+      chapter of this course — a version mismatch (Chapter 3), a
+      dropped tool from a naive merge (Chapter 8), a missing scope
+      check (Chapter 9), a possible injection (Chapter 10). Every one of
+      those was diagnosed by someone able to see what actually happened
+      on a specific request. That visibility isn't free — it has to be
+      built in, deliberately, before the incident that needs it.
+    </p>
+  </div>
+
+  <section id="the-context-object" class="subtopic">
+    <h2>Meet Context: The Tool's Window Into the Request</h2>
+    <p>
+      Every tool function so far has taken only its declared arguments.
+      The SDK also supports an optional <code>Context</code> parameter,
+      giving a tool access to the current request without changing its
+      public schema — the model never sees this parameter, only the
+      declared ones:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">context_basics.py</span>
+      </div>
+      <pre><code>from mcp.server.mcpserver import Context
+
+@mcp.tool()
+async def ping(ctx: Context) -> str:
+    """Health check that reports request metadata."""
+    meta = ctx.request_context.meta or {}
+    trace_id = meta.get("traceparent", "no-trace")
+    return f"pong (request_id={ctx.request_id}, traceparent={trace_id})"</code></pre>
+    </div>
+    <p>
+      Calling this with a client-supplied trace ID confirms the exact
+      <code>_meta</code> shape Chapter 3 documented arrives intact:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">output</span>
+      </div>
+      <pre><code>meta={'traceparent': 'trace-abc123', 'io.modelcontextprotocol/protocolVersion': '2026-07-28',
+      'io.modelcontextprotocol/clientInfo': {'name': 'mcp', 'version': '0.1.0'},
+      'io.modelcontextprotocol/clientCapabilities': {}}</code></pre>
+    </div>
+    <p>
+      Note that <code>meta</code> is a plain <code>dict</code> — reach
+      for <code>.get()</code>, not attribute access.
+    </p>
+  </section>
+
+  <section id="deprecated-logging" class="subtopic">
+    <h2>A Real Deprecation, Found by Testing</h2>
+    <p>
+      <code>Context</code> also has <code>ctx.info()</code>,
+      <code>ctx.log()</code>, and similar methods that send log messages
+      back to the client over the protocol. Trying this against the
+      installed SDK surfaced something worth knowing before you build
+      around it:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">terminal</span>
+      </div>
+      <pre><code>MCPDeprecationWarning: The logging capability is deprecated as of 2026-07-28 (SEP-2577).
+  await ctx.info(f"handling ping, request_id={ctx.request_id}")</code></pre>
+    </div>
+    <p>
+      The protocol-level logging capability — sending log messages back
+      to the connected client — is deprecated in the exact spec version
+      this course teaches. That's not a hypothetical "watch out for
+      this eventually"; it's the current state, confirmed by actually
+      running the code, not read secondhand. The practical
+      implication: build server-side observability on standard,
+      well-understood infrastructure (Python's own <code>logging</code>
+      module, feeding a real log aggregator or OpenTelemetry pipeline —
+      recall the SDK's own <code>OpenTelemetryMiddleware</code>, visible
+      if you inspect <code>mcp.middleware</code>) rather than the
+      protocol's client-facing logging feature.
+    </p>
+  </section>
+
+  <section id="structured-logging" class="subtopic">
+    <h2>Build: Structured Logging With Trace Correlation</h2>
+    <p>
+      A small helper that emits one structured JSON line per event,
+      tagged with the request ID and trace ID from <code>_meta</code>:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">structured_logging.py</span>
+      </div>
+      <pre><code>import json, logging, time
+
+logger = logging.getLogger("mcp-observability-demo")
+
+def log_structured(event: str, **fields) -> None:
+    """Emit one structured JSON log line."""
+    logger.info(json.dumps({"event": event, "ts": time.time(), **fields}))
+
+@mcp.tool()
+async def save_note(ctx: Context, title: str, body: str) -> str:
+    meta = ctx.request_context.meta or {}
+    trace_id = meta.get("traceparent", "no-trace")
+    start = time.monotonic()
+
+    log_structured("tool_call_start", tool="save_note",
+                    request_id=ctx.request_id, trace_id=trace_id)
+    _NOTES[title] = body
+    elapsed_ms = (time.monotonic() - start) * 1000
+    log_structured("tool_call_end", tool="save_note", request_id=ctx.request_id,
+                    trace_id=trace_id, elapsed_ms=round(elapsed_ms, 2), is_error=False)
+    return f"Saved '{title}'."</code></pre>
+    </div>
+    <p>Real output from calling this with a client-supplied trace ID:</p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">output</span>
+      </div>
+      <pre><code>{"event": "tool_call_start", "ts": 1786269785.21, "tool": "save_note", "request_id": "2", "trace_id": "trace-xyz"}
+{"event": "tool_call_end", "ts": 1786269785.21, "tool": "save_note", "request_id": "2", "trace_id": "trace-xyz", "elapsed_ms": 0.28, "is_error": false}</code></pre>
+    </div>
+    <p>
+      This is deliberately similar to Chapter 10's
+      <code>ContentFirewall</code> logging — same idea (log every call,
+      not just failures), formalized with structured JSON and a real
+      trace ID a host could propagate from Chapter 7's discovery step
+      all the way through a multi-hop call.
+    </p>
+  </section>
+
+  <section id="debugging-workflow" class="subtopic">
+    <h2>A Debugging Workflow That Uses This</h2>
+    <p>
+      With structured, trace-correlated logs in place, "it's not
+      working" becomes answerable: find the trace ID for the affected
+      request (from the host's own logs, or a user-visible request ID),
+      filter the server's structured logs to that trace ID, and read the
+      exact sequence of <code>tool_call_start</code>/<code>tool_call_end</code>
+      events — including <code>elapsed_ms</code> and <code>is_error</code>
+      — for that one request. This is exactly the workflow Chapter 6's
+      production scenario needed and didn't have: without a trace ID
+      tying a user's request to specific server-side log lines, "which
+      request failed and why" is a much harder question to answer.
+    </p>
+  </section>
+
+  <section id="production" class="subtopic">
+    <h2>Production Scenario: The Incident With No Trail</h2>
+    <p>
+      A user reported that an assistant "deleted the wrong note." The
+      support team could see, from application-level logs, that a
+      <code>delete_note</code> call happened around the reported time —
+      but with no trace ID connecting the user's session to that
+      specific server-side call, and no structured log of what arguments
+      were actually passed, there was no way to confirm whether the
+      wrong title was passed by the host, whether two similarly-named
+      notes existed, or whether the deletion tool had a bug. The
+      incident was never conclusively resolved. The team's actual fix
+      was retroactive: add trace-ID propagation and structured
+      argument logging (with sensitive fields redacted, not logged
+      verbatim) so the next occurrence would be answerable in minutes
+      instead of unresolved indefinitely.
+    </p>
+  </section>
+
+  <section id="mistakes" class="subtopic">
+    <h2>Common Mistakes</h2>
+    <ul>
+      <li>Building on the protocol's client-facing logging capability
+      (<code>ctx.info()</code>/<code>ctx.log()</code>) without knowing
+      it's deprecated as of the current spec — verify against the
+      installed SDK, don't assume from older tutorials.</li>
+      <li>Logging only failures — Chapter 10's firewall and this
+      chapter's pattern both log every call, because you often need the
+      successful calls around a failure to understand what happened.</li>
+      <li>Logging tool arguments verbatim without considering
+      sensitivity — per Chapter 7's interview question on this exact
+      topic, some arguments shouldn't be logged in plaintext by default.</li>
+      <li>Adding observability only after an incident, rather than
+      before — per this chapter's production scenario, the cost of
+      "not answerable" is often higher than the cost of building
+      logging in from the start.</li>
+    </ul>
+  </section>
+
+  <section id="thought-process" class="subtopic">
+    <h2>Builder Thought Process</h2>
+    <div class="thinking-box">
+      <p><strong>Problem:</strong> formalize the ad hoc logging this
+      course has been building chapter by chapter (is_error checks,
+      Chapter 10's firewall) into a real observability pattern.</p>
+      <p><strong>Assumption going in:</strong> <code>ctx.info()</code>
+      would be the natural way to add server-side logging, since it's
+      part of the documented Context API.</p>
+      <p><strong>Test:</strong> called it against the installed SDK to
+      confirm the exact usage pattern before writing it into a lesson.</p>
+      <p><strong>Observed surprise:</strong> a deprecation warning naming
+      the exact spec version this course teaches as current — not a
+      future concern, an already-true one.</p>
+      <p><strong>Decision:</strong> pivot the chapter's recommended
+      pattern to standard Python logging + trace correlation via
+      <code>_meta</code>, explain the deprecation explicitly rather than
+      quietly avoiding the deprecated API without explanation, since
+      learners following older tutorials will hit this exact warning.</p>
+    </div>
+  </section>
+
+  <section id="recap" class="subtopic">
+    <div class="points-to-remember">
+      <h2>Points To Remember</h2>
+      <ul>
+        <li><code>Context</code> gives a tool access to
+        <code>request_id</code> and the request's <code>_meta</code>
+        (as a plain dict) without changing the tool's model-visible
+        schema.</li>
+        <li>The protocol's client-facing logging capability
+        (<code>ctx.info()</code>/<code>ctx.log()</code>) is deprecated
+        as of the 2026-07-28 spec — build observability on standard
+        logging infrastructure instead.</li>
+        <li>Structured, trace-correlated logs (every call, not just
+        failures) turn "it's not working" from unanswerable into a
+        filtered log query.</li>
+        <li>Observability built before an incident is far more valuable
+        than observability added after one — per this chapter's
+        production scenario.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="cheat-sheet" class="subtopic">
+    <div class="what-is">
+      <span class="label">Cheat sheet</span>
+      <pre><code>from mcp.server.mcpserver import Context
+
+@mcp.tool()
+async def my_tool(ctx: Context, arg: str) -> str:
+    meta = ctx.request_context.meta or {}   # plain dict
+    trace_id = meta.get("traceparent", "no-trace")
+    request_id = ctx.request_id
+    # log_structured(...) around the real work -- see lesson
+
+# DEPRECATED (2026-07-28+): ctx.info(), ctx.log(), ctx.warning()
+# USE INSTEAD: standard Python logging + your own log aggregator</code></pre>
+    </div>
+  </section>
+
+  <div class="what-is">
+    <span class="label">Interview questions (4 levels)</span>
+    See <a href="interview-questions.html">Chapter 11 interview questions</a>.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../../index.html">&larr; All Chapters</a>
+    <a href="quiz.html">Take the Quiz &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+    <span><a href="https://github.com/technaom/mcp-for-everyone">github.com/technaom/mcp-for-everyone</a></span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

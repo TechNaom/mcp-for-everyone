@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testing, Debugging & Observability Project — MCP for Everyone</title>
+<meta name="description" content="Project: compute real SLO stats (success rate, p95 latency) from structured MCP logs.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-11">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../interview-questions.html">&larr; Back to interview questions</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 11 Project</span>
+    <span class="reading-time">~35 min · Level 2, Assisted</span>
+  </div>
+  <h1>Build an SLO Calculator</h1>
+  <p>Turn structured logs into the actual measurable SLOs this
+  chapter's architect interview question asked about — success rate
+  and p95 latency, per tool.</p>
+
+  <div class="hook">
+    <p>
+      This project generates real traffic against the notes server (10
+      successful saves, 1 deliberate failure), captures its structured
+      logs as they're actually emitted, and computes statistics from
+      them — not from synthetic pre-written log lines. The logging
+      pattern from this chapter's exercises is the entire foundation;
+      this project is proof that it's enough to build a real dashboard on.
+    </p>
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <h2>Build it</h2>
+  <p>
+    Implement <code>compute_slo_report</code>: parse
+    <code>tool_call_end</code> events, group by tool, and compute call
+    count, success rate, and p95 latency for each. Then
+    <code>print_report</code> to display it cleanly.
+  </p>
+
+  <div class="what-is">
+    <span class="label">Verification</span>
+    <pre><code>python solution.py</code></pre>
+    Expect (after the raw log lines):
+    <pre><code>save_note: 10 calls, 100.0% success, p95=0.10ms
+delete_note: 1 calls, 0.0% success, p95=0.09ms</code></pre>
+  </div>
+
+  <div class="what-is">
+    <span class="label">Extension challenge</span>
+    Add a <code>--alert-threshold</code> concept: if any tool's success
+    rate drops below 95%, print a clearly-marked ALERT line. This is the
+    first step from "dashboard" to "paging system" that this chapter's
+    architect interview question distinguished.
+  </div>
+
+  <div class="points-to-remember">
+    <h2>Why this project matters</h2>
+    <p>
+      Logging that can't be turned into a metric isn't really
+      observability yet — it's just text nobody reads until something
+      breaks. This project closes that loop: the exact logging pattern
+      from the exercises becomes real, computed operational numbers.
+    </p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../interview-questions.html">&larr; Interview Questions</a>
+    <a href="../../../index.html">All Chapters &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

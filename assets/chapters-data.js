@@ -207,7 +207,16 @@ window.MFE_MODULES = [
         id: "chapter-11",
         num: 11,
         title: "Testing, Debugging & Observability",
-        description: "Traces, logs, and realistic failure diagnosis."
+        path: "chapters/chapter-11-testing-debugging-observability/lesson.html",
+        description: "Structured logging and trace correlation with the real Context API, including a current spec deprecation this course caught by testing.",
+        subtopics: [
+          { id: "hook", title: "What \"it's not working\" actually means" },
+          { id: "the-context-object", title: "Meet Context" },
+          { id: "deprecated-logging", title: "A real deprecation, found by testing" },
+          { id: "structured-logging", title: "Build: structured logging with trace correlation" },
+          { id: "debugging-workflow", title: "A debugging workflow that uses this" },
+          { id: "recap", title: "Points to remember" }
+        ]
       },
       {
         id: "chapter-12",

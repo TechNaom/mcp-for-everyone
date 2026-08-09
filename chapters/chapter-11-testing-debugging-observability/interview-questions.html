@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testing, Debugging & Observability Interview Questions — MCP for Everyone</title>
+<meta name="description" content="Interview questions for Testing, Debugging & Observability.">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-11">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="practice/index.html">&larr; Back to practice bank</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 11 Interview Questions</span>
+    <span class="reading-time">~15 min</span>
+  </div>
+  <h1>Interview Questions: Testing, Debugging & Observability</h1>
+  <p>Grouped by level. Each includes a strong answer, a red flag, and a follow-up.</p>
+
+  <div class="lesson-card">
+    <h2>1. (Beginner) What does the Context parameter give a tool function access to?</h2>
+    <p><strong>Strong answer:</strong> Request-level metadata not part of the tool's declared arguments — a request ID, the incoming `_meta` dict (protocol version, client info, custom fields like a trace ID), and helper methods for the current request — without adding anything to the schema the model sees.</p>
+    <p><strong>Red flag:</strong> Thinks Context is part of the tool's public argument schema, or confuses it with the tool's regular parameters.</p>
+    <p><strong>Follow-up:</strong> "Would a model ever need to know a tool uses Context internally?"</p>
+    <p><strong>What this proves:</strong> Understands Context as server-side plumbing invisible to the model.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>2. (Beginner) Why is ctx.request_context.meta.get("key") correct but ctx.request_context.meta.key wrong?</h2>
+    <p><strong>Strong answer:</strong> meta is a plain Python dict, not a Pydantic model or custom object with attribute access — confirmed by actually inspecting its type while building this chapter. Dict access (`.get()` or `[]`) is required.</p>
+    <p><strong>Red flag:</strong> Assumes meta supports attribute access without having checked.</p>
+    <p><strong>Follow-up:</strong> "What would happen if you tried attribute access on it anyway?"</p>
+    <p><strong>What this proves:</strong> Pays attention to concrete, tested API details rather than assuming a convenient shape.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>3. (Intermediate) Why shouldn't a new MCP server built today rely on ctx.info()/ctx.log() for its primary logging strategy?</h2>
+    <p><strong>Strong answer:</strong> That capability is deprecated as of the exact spec version (2026-07-28) this course teaches — confirmed by a real deprecation warning when calling it against the installed SDK. Building a logging strategy around a deprecated protocol feature means it may be removed in a future spec revision; standard Python logging feeding a real log aggregator is both more durable and more capable (structured fields, correlation, retention policies a protocol-level log message doesn't provide).</p>
+    <p><strong>Red flag:</strong> Doesn't know this deprecation exists, or dismisses it as unimportant because "it still works for now."</p>
+    <p><strong>Follow-up:</strong> "How would you find out if a deprecated feature you're relying on has been removed in a newer SDK version?"</p>
+    <p><strong>What this proves:</strong> Takes deprecation warnings seriously and builds on durable foundations rather than the path of least resistance.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>4. (Intermediate) Why log every tool call, not just the ones that fail?</h2>
+    <p><strong>Strong answer:</strong> Per this chapter's production scenario, understanding a failure often requires seeing the successful calls around it — what sequence of actions led up to the problem, what the system's state was beforehand. A logging strategy that only captures failures has no context for diagnosing them.</p>
+    <p><strong>Red flag:</strong> Argues that logging successes is wasteful, missing the diagnostic value of surrounding context.</p>
+    <p><strong>Follow-up:</strong> "What's the cost trade-off of logging every call versus only failures, at high request volume?"</p>
+    <p><strong>What this proves:</strong> Balances completeness against cost with a clear rationale, not a blanket rule.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>5. (Senior) Design a trace-correlation strategy spanning a host, a client connection, and a server -- referencing what Chapter 3 already established about _meta.</h2>
+    <p><strong>Strong answer:</strong> Generate (or receive, if propagated from an upstream caller) a trace ID at the host level for a given user request, pass it through every subsequent tool call via `_meta` (using the `traceparent` field, aligning with the W3C Trace Context convention Chapter 3's spec research already surfaced as a reserved `_meta` key), and have every server that receives it include it in its own structured logs. This gives an end-to-end thread from "user did X" through every server-side log line involved, across host/client/server boundaries that Chapter 2 established have no inherent visibility into each other.</p>
+    <p><strong>Red flag:</strong> Proposes a custom, non-standard correlation ID scheme when the spec already reserves a standard field for exactly this purpose.</p>
+    <p><strong>Follow-up:</strong> "What happens to trace correlation when a host calls two different servers to fulfill one user request?"</p>
+    <p><strong>What this proves:</strong> Builds observability on top of what the protocol already provides rather than reinventing it, connecting Chapter 3's spec research to this chapter's practical implementation.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>6. (Senior) A server's structured logs include full tool arguments in plaintext. A security review flags this. How do you respond?</h2>
+    <p><strong>Strong answer:</strong> Agree it's a real risk — per Chapter 7's interview question on this same topic, tool arguments can carry sensitive user data, and logging them verbatim by default creates a data-exposure surface in the logging system itself (which often has different access controls than the primary application). Redesign logging to redact or hash sensitive fields by default, with full-detail logging available only behind an explicit, audited debug mode — not the default production behavior.</p>
+    <p><strong>Red flag:</strong> Defends verbatim logging as necessary for debugging without acknowledging the security trade-off, or has no redaction strategy at all.</p>
+    <p><strong>Follow-up:</strong> "How would you debug a real production issue if the argument that mattered was redacted?"</p>
+    <p><strong>What this proves:</strong> Balances debuggability against data protection rather than defaulting to either extreme.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>7. (Architect) Design the observability platform for an org running dozens of MCP servers across multiple teams.</h2>
+    <p><strong>Strong answer:</strong> Standardize the structured log schema and trace-correlation convention (the `traceparent` field, consistent event names like `tool_call_start`/`tool_call_end`) as a platform-level contract every team's server must follow, rather than letting each team invent its own format — this is what makes cross-server tracing (Q5) actually work when a request spans multiple independently-owned servers. Centralize log aggregation and provide dashboards/alerting built on the standard schema. Treat this the same way Chapter 8's discussion of platform-level tool-naming conventions treated collision prevention: solve it once, structurally, rather than per-server.</p>
+    <p><strong>Red flag:</strong> Lets every team build incompatible logging independently, making org-wide incident investigation impossible.</p>
+    <p><strong>Follow-up:</strong> "How would you retrofit this standard onto servers that already have inconsistent logging in production?"</p>
+    <p><strong>What this proves:</strong> Recognizes observability as a platform capability requiring standardization, echoing the same architectural pattern Chapter 8 established for naming.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>8. (Architect) How would you decide what SLOs (service level objectives) to set for an MCP server, and how does this chapter's logging enable measuring them?</h2>
+    <p><strong>Strong answer:</strong> Candidate SLOs: tool-call success rate (derivable from `is_error` in structured logs, present in every chapter's error-handling pattern), p95/p99 latency (from `elapsed_ms`, already in this chapter's log schema), and catalog-discovery availability (does `list_tools()` succeed reliably). Each of these is directly measurable from the structured logging pattern this chapter built — the architecture decision to log every call with these fields wasn't just for debugging, it's the raw material for any SLO dashboard. Setting SLOs before this logging exists means guessing; setting them after means measuring.</p>
+    <p><strong>Red flag:</strong> Proposes SLOs with no connection to what's actually measurable from the system's existing observability, or proposes building new instrumentation from scratch rather than reusing what this chapter's pattern already captures.</p>
+    <p><strong>Follow-up:</strong> "Which of these SLOs would you prioritize enforcing with paging/alerting versus just dashboards?"</p>
+    <p><strong>What this proves:</strong> Connects observability architecture directly to measurable business/reliability outcomes — the final synthesis of this chapter's technical content into an architect-level operating practice.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="practice/index.html">&larr; Practice Bank</a>
+    <a href="project/index.html">Build the Project &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

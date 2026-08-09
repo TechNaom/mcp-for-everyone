@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testing, Debugging & Observability Exercises — MCP for Everyone</title>
+<meta name="description" content="Hands-on exercises for Testing, Debugging & Observability.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-11">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../quiz.html">&larr; Back to the quiz</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 11 Exercises</span>
+    <span class="reading-time">~25 min</span>
+  </div>
+  <h1>Exercises: Testing, Debugging & Observability</h1>
+  <p>Add structured, trace-correlated logging to the notes server, then
+  use it to answer a "what happened" question the way this chapter's
+  debugging workflow describes.</p>
+
+  <div class="what-is">
+    <span class="label">How to run these</span>
+    <pre><code>pip install "mcp[cli]"
+cd chapters/chapter-11-testing-debugging-observability/exercises
+python solution.py   # or fill starter.py first</code></pre>
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">1</span> Add logging to save_note</h3>
+    <p>Add <code>Context</code> and start/end structured log events to
+    <code>save_note</code>, per TODO 1.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">2</span> (Production-gear) Log failures too</h3>
+    <p>Add the same to <code>delete_note</code>, per TODO 2 — including
+    logging a <code>tool_call_end</code> event with <code>is_error=True</code>
+    BEFORE raising the exception, so even a failed call leaves a trail.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">3</span> (Production-gear) Build the trace filter</h3>
+    <p>Implement <code>find_calls_for_trace</code> per TODO 3 — the core
+    of the debugging workflow this chapter describes.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">4</span> (Production-gear) Reconstruct an incident</h3>
+    <p>Simulate three interleaved trace IDs' worth of log lines (at
+    least 2 events each), mixed together in one list. Use your trace
+    filter to reconstruct the full sequence of events for just one of
+    them — the exact task a support engineer would do with real logs.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">5</span> Combine with Chapter 10's firewall</h3>
+    <p>Add a <code>hit_count</code> field to your structured logs, the
+    way Chapter 10's <code>ContentFirewall</code> logged scan results.
+    What would it look like to have ONE unified logging function used by
+    both chapters' patterns, instead of two similar-but-separate ones?</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">6</span> (Production-gear) Redact a sensitive field</h3>
+    <p>Add a <code>body</code> field to your <code>save_note</code>
+    logging, but hash it (e.g. with <code>hashlib.sha256</code>) rather
+    than logging it verbatim — per this chapter's interview question
+    about logging sensitive tool arguments.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../quiz.html">&larr; Back to Quiz</a>
+    <a href="../practice/index.html">Practice Bank &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>
