@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capstone Interview Questions — MCP for Everyone</title>
+<meta name="description" content="Architecture-scenario interview questions matching the capstone's format.">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-13">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="practice/index.html">&larr; Back to practice bank</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 13 Interview Questions</span>
+    <span class="reading-time">~20 min</span>
+  </div>
+  <h1>Interview Questions: Architecture Scenarios</h1>
+  <p>Full architecture-interview scenarios, the kind this whole course
+  has been building toward. Each expects a structured answer covering
+  requirements, trade-offs, and risks — not a one-line response.</p>
+
+  <div class="lesson-card">
+    <h2>1. (Intermediate → Senior) Design a private enterprise GenAI assistant that needs to reach internal tools via MCP. What are your first five questions to the stakeholders before proposing an architecture?</h2>
+    <p><strong>Strong answer:</strong> Who are the consumers (internal only, or partner-facing too)? What's the sensitivity of the data/tools involved — does this touch regulated data? What's the expected scale (10 users or 10,000)? Is there an existing identity/auth system to integrate with, or does one need to be built? What's the tolerance for legacy/partner client compatibility (Chapter 12)? A strong answer asks requirements-gathering questions before architecture, rather than jumping straight to a diagram.</p>
+    <p><strong>Red flag:</strong> Proposes a specific architecture immediately with no clarifying questions.</p>
+    <p><strong>Follow-up:</strong> "The stakeholder says 'just make it work like ChatGPT plugins.' How do you respond?"</p>
+    <p><strong>What this proves:</strong> Requirements-first thinking, the foundation every capstone submission needs.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>2. (Senior) Design RAG-style document retrieval exposed through MCP for 10 million documents. What changes about your server design at that scale versus the notes server from Chapter 4?</h2>
+    <p><strong>Strong answer:</strong> A single templated resource per document (per Chapter 5's scale discussion) doesn't work at this volume for discovery — you'd expose search/retrieval as tools (querying an actual index) rather than trying to enumerate resources. Caching (Chapter 3's cacheScope/ttlMs metadata) becomes essential for repeated queries. The underlying retrieval infrastructure (vector store, ranking) is out of MCP's scope entirely — MCP is the interface, not the retrieval engine.</p>
+    <p><strong>Red flag:</strong> Proposes exposing 10 million individual resources, missing the scale lesson from Chapter 5.</p>
+    <p><strong>Follow-up:</strong> "How would you handle a document that updates after being cached by a client?"</p>
+    <p><strong>What this proves:</strong> Applies Chapter 5's scale reasoning to a concrete large-scale scenario.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>3. (Senior) Design an agent platform for a bank that needs to call multiple internal MCP servers, some far more sensitive than others. How do you structure trust?</h2>
+    <p><strong>Strong answer:</strong> Different servers get different scope requirements and possibly different authentication strength (Chapter 9) — a read-only "branch hours" tool doesn't need the same trust as a "transfer funds" tool. Sandboxing (Chapter 9) and human confirmation (Chapter 10) scale with impact, not uniformly. Observability (Chapter 11) must be strong enough to satisfy banking audit requirements specifically — not generic logging, but who-did-what-when at the transaction level.</p>
+    <p><strong>Red flag:</strong> Applies uniform trust/permission handling regardless of a tool's actual risk level.</p>
+    <p><strong>Follow-up:</strong> "How would you classify a new tool's risk level before deciding its scope requirements?"</p>
+    <p><strong>What this proves:</strong> Risk-proportionate architecture, directly transferable to the capstone's healthcare scenario.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>4. (Senior → Architect) Design secure MCP infrastructure for an organization that must support both brand-new internal servers and legacy partner integrations indefinitely.</h2>
+    <p><strong>Strong answer:</strong> Leverage the SDK's dual-era-by-default behavior (Chapter 12) rather than building custom version-bridging — but back it with dual-era test coverage (this course's Chapter 12 project) so "accepts both" doesn't silently mean "behaves differently for each." Set an explicit compatibility policy: which versions are supported, monitored via real usage data (Chapter 11), not guessed.</p>
+    <p><strong>Red flag:</strong> Proposes building a custom protocol-bridging layer, unaware the SDK already handles this.</p>
+    <p><strong>Follow-up:</strong> "How would you know when it's safe to deprecate legacy support?"</p>
+    <p><strong>What this proves:</strong> Builds on the SDK's real, tested capabilities (Chapter 12) rather than reinventing them.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>5. (Architect) Design an AI coding assistant's MCP integration, where tools can read and write source code across many repositories with different sensitivity levels.</h2>
+    <p><strong>Strong answer:</strong> Scope per-repository or per-repository-class (Chapter 9), not a single "code access" grant — a tool with write access to a public open-source repo is a different risk than one with write access to a production infrastructure repo. Fetched code/file content is untrusted-content territory (Chapter 10) — a comment or docstring in fetched code could theoretically carry injection-style content, same defense-in-depth applies. Namespace tools per repository-server if the platform connects to genuinely separate systems (Chapter 8).</p>
+    <p><strong>Red flag:</strong> Treats "code" as inherently safe content, missing that Chapter 10's untrusted-content reasoning applies to any externally-sourced text, including code comments.</p>
+    <p><strong>Follow-up:</strong> "Should a coding agent need human confirmation before every file write, or only some? What determines the line?"</p>
+    <p><strong>What this proves:</strong> Generalizes the course's security patterns to a domain (coding agents) not explicitly covered, showing real transferable understanding.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>6. (Architect) Design evaluation infrastructure for an MCP-based agent platform — how do you know the system is working correctly over time, not just at launch?</h2>
+    <p><strong>Strong answer:</strong> Extend Chapter 11's SLO calculator concept into ongoing measurement: tool-call success rate, p95 latency, and — specific to agent quality — tool-selection accuracy (did the model/decision-layer pick the right tool for a given request, measurable against a labeled evaluation set). Combine with Chapter 12's dual-era parity testing as a regression gate on every deploy, and Chapter 10's injection-pattern regression corpus. Evaluation isn't one system, it's several purpose-built checks layered together, each catching a different failure class this course covered separately.</p>
+    <p><strong>Red flag:</strong> Proposes a single generic "evaluation dashboard" without naming the specific, distinct things being evaluated.</p>
+    <p><strong>Follow-up:</strong> "Which of these evaluation layers would you run on every deploy versus periodically?"</p>
+    <p><strong>What this proves:</strong> Synthesizes evaluation as a composite of distinct, purpose-built checks — connecting nearly every technical chapter in this course into one coherent operating practice.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>7. (Architect) Design secure MCP infrastructure for Northshore Regional Health (this capstone's scenario) — walk through your top three architecture decisions and their trade-offs.</h2>
+    <p><strong>Strong answer:</strong> (1) Separate servers for patient records versus external document fetching — trade-off: more operational surface (two things to deploy/monitor) versus a much cleaner trust boundary (Chapter 8's reasoning) that directly serves the compliance concern. (2) Scope taxonomy separating read/write/role — trade-off: more upfront design work versus avoiding the "one broad scope" anti-pattern from Chapter 9. (3) Layered injection defense (scan + least-privilege + confirmation for anything consequential) rather than a single scanner — trade-off: more implementation complexity versus not overclaiming protection Chapter 10 explicitly warned against. A strong answer names the actual trade-off in each decision, not just the choice.</p>
+    <p><strong>Red flag:</strong> States decisions with no acknowledged trade-off, as if each were obviously correct with no cost.</p>
+    <p><strong>Follow-up:</strong> "Which of these three decisions would you revisit first if the platform needed to scale to 10x the current user base?"</p>
+    <p><strong>What this proves:</strong> This is effectively a live run-through of the capstone itself — the strongest evidence of whether the course's content actually transferred into architectural judgment.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>8. (Architect) A CTO asks you to justify, in one paragraph, why this course's approach to MCP architecture (layered security, tested compatibility, real observability) is worth the engineering investment compared to "just wire up the tools and ship it."</h2>
+    <p><strong>Strong answer:</strong> "Just wire it up" works until the first incident — an injection that causes real harm, an audit that can't be answered, a partner integration that silently breaks. Every pattern in this course exists because of a documented, realistic failure mode (the production scenarios in every chapter), not speculative caution. The investment is front-loaded (design time, some engineering overhead) but the alternative cost is backloaded and larger — an unresolved incident (Chapter 11's production scenario), a compliance failure, a silent regression (Chapter 12's). Frame it as risk-adjusted cost, not abstract "best practice."</p>
+    <p><strong>Red flag:</strong> Argues from principle ("security is important") without connecting to concrete, realistic costs of skipping it.</p>
+    <p><strong>Follow-up:</strong> "How would you quantify this trade-off for a CTO who thinks in dollars, not principles?"</p>
+    <p><strong>What this proves:</strong> Can communicate engineering judgment in business terms — the final skill this course has been building toward across every "production scenario" section.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="practice/index.html">&larr; Practice Bank</a>
+    <a href="project/index.html">Start the Capstone &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

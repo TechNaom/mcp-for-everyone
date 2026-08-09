@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capstone Deliverables Checklist — MCP for Everyone</title>
+<meta name="description" content="The capstone's deliverables broken into concrete, sequenced tasks.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-13">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../quiz.html">&larr; Back to the quiz</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 13 Deliverables</span>
+    <span class="reading-time">~4–8 hours total</span>
+  </div>
+  <h1>Capstone Deliverables Checklist</h1>
+  <p>The capstone broken into sequenced, concrete tasks — work through
+  them in order, since later ones depend on earlier decisions.</p>
+
+  <div class="what-is">
+    <span class="label">Before you start</span>
+    Read the full scenario in the lesson. Run the reference skeleton in
+    <code>project/starter.py</code> to see the pattern working before
+    you extend it — don't design in the abstract without touching the
+    real code first.
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">1</span> Write the problem statement (0.5–1 page)</h3>
+    <p>Restate Northshore's problem in your own words. Name the specific
+    compliance concern explicitly — not "security is important" but the
+    exact injection-via-external-document scenario described.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">2</span> Define requirements</h3>
+    <p>Functional requirements (what the system does) and non-functional
+    requirements (availability, latency, auditability) — separate
+    sections, per the lesson's "what to produce" list.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">3</span> Design server boundaries</h3>
+    <p>Decide how many MCP servers, and why — this becomes your first
+    ADR. Extend the reference skeleton's two-server split (patient
+    records, external docs) or justify a different boundary.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">4</span> (Production-gear) Design the permission scope taxonomy</h3>
+    <p>Per Chapter 9's senior interview question on scope design — group
+    by resource and risk, not one scope per tool or one scope for
+    everything. This becomes your second ADR.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">5</span> (Production-gear) Design the layered injection defense</h3>
+    <p>Specify all the layers from Chapter 10's cheat sheet as they
+    apply here — scanning, least privilege, confirmation, structural
+    separation. This becomes your third ADR.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">6</span> Design the observability strategy</h3>
+    <p>Specify exactly what gets logged so "who accessed which patient's
+    data, when" is answerable — reference Chapter 11's structured
+    logging pattern concretely, don't describe logging in the abstract.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">7</span> Write the data flow trace</h3>
+    <p>Walk one real request (a clinician requesting a patient summary)
+    through every component, end to end.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">8</span> (Production-gear) Extend the reference skeleton</h3>
+    <p>In <code>project/starter.py</code>, close at least one of the
+    gaps named in the lesson (act on injection flags, real audit
+    logging, or authentication behind scopes) — a working code extension,
+    not just a written description.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">9</span> Write failure handling, deployment, and cost sections</h3>
+    <p>Per the lesson's "what to produce" list — brief but concrete.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">10</span> Assemble and self-review against the rubric</h3>
+    <p>Check your submission against the lesson's rubric table and
+    "common mistakes" list before considering it done.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../quiz.html">&larr; Back to Quiz</a>
+    <a href="../practice/index.html">Practice Bank &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

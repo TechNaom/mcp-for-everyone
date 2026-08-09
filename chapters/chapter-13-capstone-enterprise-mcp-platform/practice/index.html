@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capstone Alternate Scenarios — MCP for Everyone</title>
+<meta name="description" content="Alternate capstone scenarios across different regulated domains, for additional practice or variety.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-13">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../exercises/index.html">&larr; Back to deliverables checklist</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 13 Practice Bank</span>
+    <span class="reading-time">Optional — pick one for extra practice</span>
+  </div>
+  <h1>Alternate Capstone Scenarios</h1>
+  <p>The lesson's Northshore Regional Health scenario is the primary
+  capstone. These are alternates — use one for additional practice, to
+  compare against a study group's different submission, or if your
+  instructor assigns a specific domain.</p>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Domain · Banking</span>
+    <h3>Meridian Trust — fraud investigation copilot</h3>
+    <p>A regional bank wants an assistant for fraud investigators:
+    look up transaction history, pull customer risk scores from a
+    third-party service, and draft suspicious-activity report summaries.
+    Compliance's specific worry: an investigator's assistant must never
+    be able to actually move money or change account status, even if
+    manipulated — investigation tools and transaction tools must be
+    architecturally incapable of being confused for one another.</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Domain · Insurance</span>
+    <h3>Coastal Mutual — claims processing assistant</h3>
+    <p>An insurer wants an assistant that helps adjusters review claims,
+    pull policy documents, and check submitted photos/documents against
+    fraud-indicator patterns. Compliance's specific worry: claimant-submitted
+    documents (the definition of untrusted content) are the primary
+    input, and the assistant must never let a submitted document
+    influence which policy limits or payout amounts get suggested,
+    only factual claim details.</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Domain · Enterprise IT</span>
+    <h3>Vantage Systems — incident response copilot</h3>
+    <p>An enterprise IT team wants an assistant that can query
+    monitoring systems, pull runbooks, and post updates to an incident
+    channel during outages. Compliance's specific worry: this assistant
+    will have access to internal architecture details and credentials
+    context during incidents — a compromised or manipulated instance
+    during an active incident is a uniquely bad time for it to leak
+    information or take unauthorized action.</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Domain · Retail</span>
+    <h3>Brightline Retail — customer support automation</h3>
+    <p>A retailer wants an assistant that can look up order status,
+    process returns within policy limits, and answer product questions
+    using externally-sourced product documentation. Compliance's
+    specific worry: the assistant must never approve a return outside
+    policy limits (dollar amount, time window) regardless of how a
+    customer's message is phrased — this is squarely a least-privilege
+    and confirmation-threshold design problem.</p>
+  </div>
+
+  <div class="what-is">
+    <span class="label">Using an alternate scenario</span>
+    Follow the same deliverables checklist and rubric from the main
+    capstone — only the domain and specific compliance concern change.
+    Each scenario above is deliberately built around a different one of
+    this course's Module 5 security patterns (fraud/least-privilege,
+    untrusted-content/injection, access-during-incident, policy-limit
+    enforcement) so no two scenarios exercise identical reasoning.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../exercises/index.html">&larr; Deliverables Checklist</a>
+    <a href="../interview-questions.html">Interview Questions &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

@@ -244,7 +244,16 @@ window.MFE_MODULES = [
         id: "chapter-13",
         num: 13,
         title: "Capstone: Enterprise MCP Platform Architecture",
-        description: "Design secure, multi-tenant MCP infrastructure for a regulated enterprise."
+        path: "chapters/chapter-13-capstone-enterprise-mcp-platform/lesson.html",
+        description: "Design secure, multi-tenant MCP infrastructure for a regulated enterprise -- a Level 4 architecture challenge with a tested reference skeleton to build from.",
+        subtopics: [
+          { id: "hook", title: "The business problem" },
+          { id: "requirements", title: "What you're actually designing" },
+          { id: "reference-architecture", title: "A tested reference architecture" },
+          { id: "what-to-produce", title: "What to produce" },
+          { id: "adr-format", title: "ADR format" },
+          { id: "rubric", title: "Rubric" }
+        ]
       }
     ]
   }
