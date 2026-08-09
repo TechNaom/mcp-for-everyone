@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Building an MCP Client/Host Exercises — MCP for Everyone</title>
+<meta name="description" content="Hands-on exercises for Building an MCP Client/Host.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-07">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../quiz.html">&larr; Back to the quiz</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 7 Exercises</span>
+    <span class="reading-time">~25 min</span>
+  </div>
+  <h1>Exercises: Building an MCP Client/Host</h1>
+  <p>Extend <code>ToyHost</code> with argument support and defensive
+  checks — the kind of hardening a toy example needs before it's
+  trustworthy.</p>
+
+  <div class="what-is">
+    <span class="label">How to run these</span>
+    <pre><code>pip install "mcp[cli]"
+cd chapters/chapter-07-building-an-mcp-client-host/exercises
+python solution.py   # or fill starter.py first</code></pre>
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">1</span> Add argument support</h3>
+    <p>Implement <code>handle_with_args</code> per TODO 1, so
+    <code>save_note</code> and other argument-taking tools actually work
+    through the host.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">2</span> (Production-gear) Guard against missing discovery</h3>
+    <p>Implement TODO 2: refuse to call any tool if <code>discover()</code>
+    hasn't run yet, with a clear message instead of a confusing failure.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">3</span> (Production-gear) Test the typo path</h3>
+    <p>Confirm a misspelled command produces a clear message, not a raw
+    exception, per TODO 3.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">4</span> (Production-gear) Add a call counter</h3>
+    <p>Add a <code>self.call_count</code> attribute to <code>ToyHost</code>
+    that increments on every successful tool call (not failed ones).
+    This is the simplest possible building block for the observability
+    content in Module 6 — notice how little code it takes to start
+    building real operational visibility.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">5</span> Swap in a smarter decision rule</h3>
+    <p>Replace the exact-match lookup in <code>handle_with_args</code>
+    with a rule that also matches if the command is a case-insensitive
+    match, or a unique prefix of exactly one known tool name (e.g. "sav"
+    uniquely matches "save_note"). What should happen if a prefix matches
+    more than one tool?</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">6</span> (Production-gear) Handle a slow tool</h3>
+    <p>Using the same <code>asyncio.wait_for</code> pattern from Chapter
+    6's health-check project, add a timeout to
+    <code>handle_with_args</code>'s tool call so a hung tool can't hang
+    the whole host.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../quiz.html">&larr; Back to Quiz</a>
+    <a href="../practice/index.html">Practice Bank &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

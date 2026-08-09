@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Building an MCP Client/Host Practice Bank — MCP for Everyone</title>
+<meta name="description" content="Practice bank for Building an MCP Client/Host.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-07">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../exercises/index.html">&larr; Back to exercises</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 7 Practice Bank</span>
+    <span class="reading-time">~20 min</span>
+  </div>
+  <h1>Practice Bank: Building an MCP Client/Host</h1>
+  <p>Judgment calls for the application-layer decisions MCP itself
+  doesn't make for you.</p>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Support</span>
+    <h3>The confusing success message</h3>
+    <p>A user reports "I asked it to delete a note and it said it worked,
+    but the note is still there." Walk through, in order, what you'd
+    check in the host's code, referencing this chapter's most common bug
+    pattern.</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Product</span>
+    <h3>The impatient decision-maker</h3>
+    <p>Your real (LLM-based) decision step takes 3 seconds to choose a
+    tool, and users complain the assistant feels slow. Is this an MCP
+    problem? What layer of the system does this delay actually belong
+    to?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Cost</span>
+    <h3>The catalog re-fetch on every message</h3>
+    <p>A host re-calls <code>list_tools()</code> before every single
+    decision, even within the same ongoing conversation. What's the cost
+    of this, and is there ever a good reason to actually do it anyway?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Debugging</span>
+    <h3>The host that hangs</h3>
+    <p>A host occasionally hangs indefinitely after a tool call. Given
+    Chapter 6's health-check project already solved a similar problem for
+    server monitoring, what's the equivalent fix for the host's own tool
+    invocation code?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Compliance</span>
+    <h3>The audit trail gap</h3>
+    <p>Legal asks for a record of every tool call a host made on behalf
+    of users over the past month. What would you need to have been
+    logging from day one to answer this, and what should NOT be in that
+    log by default (revisit this chapter's interview question 6)?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Operations</span>
+    <h3>The silent catalog change</h3>
+    <p>A server's owning team removes a tool the host's cached catalog
+    still lists. The host tries to call it and gets a clean
+    <code>is_error=True</code> — but from the user's perspective, a
+    previously-working feature just started failing with no warning.
+    What operational practice would surface this proactively instead of
+    waiting for a user to hit it?</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../exercises/index.html">&larr; Exercises</a>
+    <a href="../interview-questions.html">Interview Questions &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

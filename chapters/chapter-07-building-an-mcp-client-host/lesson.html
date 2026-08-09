@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Building an MCP Client/Host — MCP for Everyone</title>
+<meta name="description" content="Build the other half of the wire: a host that discovers tools and decides which one to call, tested end-to-end.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-07">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../../index.html">&larr; Back to all chapters</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 7</span>
+    <span class="badge-difficulty">Intermediate</span>
+    <span class="reading-time">~30 min</span>
+  </div>
+
+  <h1>Building an MCP Client/Host</h1>
+  <p class="lede">
+    Every chapter so far built servers. This one builds the other half —
+    a host that discovers what a server offers and decides what to do
+    with it — using a stand-in for the model's decision-making so the
+    course stays runnable without an API key.
+  </p>
+
+  <nav class="page-toc" aria-label="On this page">
+    <span class="toc-label">On this page</span>
+    <a href="#hook">1. What a host actually does</a>
+    <a href="#two-jobs">2. The host's two jobs</a>
+    <a href="#toy-host">3. Build: a minimal host</a>
+    <a href="#where-llm-fits">4. Where a real LLM fits in</a>
+    <a href="#production">5. Production scenario: the host that trusted tool names blindly</a>
+    <a href="#mistakes">6. Common mistakes</a>
+    <a href="#thought-process">7. Builder thought process</a>
+    <a href="#recap">8. Points to remember</a>
+    <a href="#cheat-sheet">9. Cheat sheet</a>
+  </nav>
+
+  <div class="hook" id="hook">
+    <p>
+      You've written five MCP servers now, and used the SDK's
+      <code>Client</code> to test every one of them. But
+      <code>Client</code> is not a host — it's the protocol connection
+      Chapter 2 described. A real host wraps one or more clients, decides
+      which tools to expose to a model, decides which tool call to
+      actually make based on a user's request, and handles what happens
+      when a call fails. None of that is provided by the SDK's
+      <code>Client</code> — it's application code you write. This chapter
+      writes the smallest version of that application code that still
+      does something real.
+    </p>
+  </div>
+
+  <section id="two-jobs" class="subtopic">
+    <h2>The Host's Two Jobs</h2>
+    <p>
+      Strip away everything else, and a host does exactly two things:
+    </p>
+    <ol>
+      <li><strong>Discover</strong> — call <code>list_tools()</code> (and
+      <code>list_resources()</code>/<code>list_resource_templates()</code>
+      from Chapter 5) to find out what a server offers.</li>
+      <li><strong>Decide and invoke</strong> — given a user's request,
+      pick a tool (normally an LLM's job) and call it with
+      <code>call_tool()</code>, then do something with the result.</li>
+    </ol>
+    <p>
+      A real host's job 2 is genuinely hard — it's the entire practice of
+      prompting a model with a tool catalog and getting a reliable
+      decision back. This course doesn't have an LLM API key to spend
+      (per the "no signup required" philosophy from the README), so this
+      chapter's example uses simple keyword matching to stand in for that
+      decision — the MCP-facing mechanics (discover, call, handle result)
+      are identical either way, and that's what this chapter teaches.
+    </p>
+  </section>
+
+  <section id="toy-host" class="subtopic">
+    <h2>Build: A Minimal Host</h2>
+    <p>
+      A class with exactly those two responsibilities, tested against
+      Chapter 4's notes server:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">toy_host.py</span>
+      </div>
+      <pre><code>class ToyHost:
+    """Stands in for the model-driven decision loop a real host runs.
+    Real hosts hand the tool catalog + user message to an LLM and let it
+    decide; this uses simple keyword rules instead, to keep the course
+    runnable with no API key. The MCP-facing mechanics (discover tools,
+    call one, read the result) are identical either way."""
+
+    def __init__(self, client):
+        self.client = client
+        self.tools_by_name = {}
+
+    async def discover(self):
+        result = await self.client.list_tools()
+        self.tools_by_name = {t.name: t for t in result.tools}
+        return list(self.tools_by_name.keys())
+
+    async def handle(self, command: str) -> str:
+        if command not in self.tools_by_name:
+            return f"I don't know how to '{command}' -- available: {list(self.tools_by_name)}"
+        result = await self.client.call_tool(command, {})
+        if result.is_error:
+            return f"Tool '{command}' failed: {result.content[0].text}"
+        return str(result.structured_content)</code></pre>
+    </div>
+    <p>Running it against the notes server:</p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">output</span>
+      </div>
+      <pre><code>Discovered: ['save_note', 'list_notes', 'delete_note', 'search_notes', 'note_count', 'rename_note']
+{'result': []}
+I don't know how to 'not_a_real_tool' -- available: ['save_note', 'list_notes', ...]</code></pre>
+    </div>
+    <p>
+      Notice <code>handle()</code> checks <code>result.is_error</code>
+      before trusting the response — Chapters 3 and 4 established that
+      tool failures come back as normal results with a flag, not
+      exceptions, and a host is exactly the code that has to act on that
+      flag correctly. A host that skips this check will happily report a
+      failed tool call as if it succeeded.
+    </p>
+  </section>
+
+  <section id="where-llm-fits" class="subtopic">
+    <h2>Where a Real LLM Fits In</h2>
+    <p>
+      Swap <code>ToyHost.handle</code>'s keyword lookup for a real
+      decision loop and the shape barely changes: hand the model the
+      tool catalog (each tool's name, description, and input schema —
+      exactly what <code>list_tools()</code> returned above), let it
+      choose a tool and produce arguments, then call
+      <code>call_tool(name, arguments)</code> with what it decided.
+      Everything downstream — checking <code>is_error</code>, handling a
+      missing tool, reporting the result — is identical to what you just
+      built and tested. The "AI" part of an MCP host is entirely
+      contained in step 2's decision-making; steps 1, 3, and error
+      handling are the same protocol mechanics regardless of what's
+      making the decision.
+    </p>
+  </section>
+
+  <section id="production" class="subtopic">
+    <h2>Production Scenario: The Host That Trusted Tool Names Blindly</h2>
+    <p>
+      A team's first host implementation passed whatever tool name a
+      model returned straight to <code>call_tool()</code> with no
+      validation against the discovered catalog. It worked in testing.
+      In production, a model occasionally hallucinated a plausible-sounding
+      tool name that didn't exist on the server — and because the SDK
+      surfaces that as a normal <code>is_error=True</code> result rather
+      than a crash, the host's naive "if not error, report success"
+      logic (skipping the is_error check, unlike <code>ToyHost.handle</code>
+      above) reported a confusing, garbled "success" message to the user
+      instead of a clear "I tried to use a tool that doesn't exist"
+      error. The fix was exactly the check this chapter's
+      <code>ToyHost</code> already includes: validate the tool name
+      against the discovered catalog before calling, and check
+      <code>is_error</code> after.
+    </p>
+  </section>
+
+  <section id="mistakes" class="subtopic">
+    <h2>Common Mistakes</h2>
+    <ul>
+      <li>Skipping <code>is_error</code> checks in host code — this is
+      the single most common host-side bug across this course's
+      production scenarios (Chapters 4, 6, and now 7 all hit variations
+      of it).</li>
+      <li>Calling a tool name that wasn't in the discovered catalog —
+      validate before calling, don't assume the decision-making step
+      (model or otherwise) only ever produces valid names.</li>
+      <li>Re-discovering tools on every single call instead of caching
+      the catalog for the session — wasteful, though not incorrect (per
+      Chapter 3, nothing about statelessness requires re-discovery on
+      every request; caching a catalog client-side is a host-level
+      choice, not a protocol violation).</li>
+      <li>Treating the "decide which tool" step as MCP's job — MCP gives
+      you the catalog and the calling mechanism; the decision logic
+      (model-based or otherwise) is entirely host application code.</li>
+    </ul>
+  </section>
+
+  <section id="thought-process" class="subtopic">
+    <h2>Builder Thought Process</h2>
+    <div class="thinking-box">
+      <p><strong>Problem:</strong> build the smallest host that
+      demonstrates real discover-decide-invoke mechanics without needing
+      an LLM API key.</p>
+      <p><strong>Assumptions:</strong> the "decide" step can be faked
+      with simple logic without changing anything about how the
+      "discover" and "invoke" steps work — those are pure MCP mechanics.</p>
+      <p><strong>Approach considered:</strong> a full natural-language
+      parser vs. a simple exact-match lookup. Chose exact-match — the
+      teaching goal is the surrounding mechanics (catalog caching,
+      error checking), not building a mini NLU system.</p>
+      <p><strong>Validation:</strong> ran <code>ToyHost</code> against
+      the real notes server and confirmed both the success path and the
+      unknown-command path produce sensible output.</p>
+      <p><strong>Decision:</strong> keep the decision logic intentionally
+      minimal and be explicit in the lesson about what a real host
+      replaces it with, rather than pretending keyword matching is a
+      realistic stand-in for model reasoning.</p>
+    </div>
+  </section>
+
+  <section id="recap" class="subtopic">
+    <div class="points-to-remember">
+      <h2>Points To Remember</h2>
+      <ul>
+        <li>A host has exactly two jobs: discover what a server offers,
+        and decide-then-invoke based on what it finds.</li>
+        <li>The SDK's <code>Client</code> is not a host — it's the
+        protocol connection; discovery caching, decision logic, and error
+        handling are all application code you write.</li>
+        <li>Checking <code>result.is_error</code> after every tool call
+        is host-side code's responsibility — skipping it is this course's
+        most repeated production bug pattern for a reason.</li>
+        <li>Swapping keyword-matching for a real LLM changes only the
+        "decide" step; discovery, invocation, and error handling stay
+        identical.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="cheat-sheet" class="subtopic">
+    <div class="what-is">
+      <span class="label">Cheat sheet</span>
+      <pre><code>class Host:
+    async def discover(self):
+        result = await self.client.list_tools()
+        self.catalog = {t.name: t for t in result.tools}
+
+    async def invoke(self, name, arguments):
+        if name not in self.catalog:
+            return "unknown tool"          # validate before calling
+        result = await self.client.call_tool(name, arguments)
+        if result.is_error:                # ALWAYS check this
+            return f"failed: {result.content[0].text}"
+        return result.structured_content</code></pre>
+    </div>
+  </section>
+
+  <div class="what-is">
+    <span class="label">Interview questions (4 levels)</span>
+    See <a href="interview-questions.html">Chapter 7 interview questions</a>.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../../index.html">&larr; All Chapters</a>
+    <a href="quiz.html">Take the Quiz &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+    <span><a href="https://github.com/technaom/mcp-for-everyone">github.com/technaom/mcp-for-everyone</a></span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

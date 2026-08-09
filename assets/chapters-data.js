@@ -135,7 +135,15 @@ window.MFE_MODULES = [
         id: "chapter-07",
         num: 7,
         title: "Building an MCP Client/Host",
-        description: "Connect an agent loop to a running server."
+        path: "chapters/chapter-07-building-an-mcp-client-host/lesson.html",
+        description: "Build the other half of the wire: a host that discovers tools and decides what to call, tested end-to-end.",
+        subtopics: [
+          { id: "hook", title: "What a host actually does" },
+          { id: "two-jobs", title: "The host's two jobs" },
+          { id: "toy-host", title: "Build: a minimal host" },
+          { id: "where-llm-fits", title: "Where a real LLM fits in" },
+          { id: "recap", title: "Points to remember" }
+        ]
       },
       {
         id: "chapter-08",

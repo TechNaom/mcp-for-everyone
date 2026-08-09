@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Building an MCP Client/Host Interview Questions — MCP for Everyone</title>
+<meta name="description" content="Interview questions for Building an MCP Client/Host.">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-07">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="practice/index.html">&larr; Back to practice bank</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 7 Interview Questions</span>
+    <span class="reading-time">~15 min</span>
+  </div>
+  <h1>Interview Questions: Building an MCP Client/Host</h1>
+  <p>Grouped by level. Each includes a strong answer, a red flag, and a follow-up.</p>
+
+  <div class="lesson-card">
+    <h2>1. (Beginner) What are the two core jobs of an MCP host?</h2>
+    <p><strong>Strong answer:</strong> Discover what a connected server offers (tools, resources, prompts), and decide-then-invoke — pick something to call based on a user's request, then call it and handle the result.</p>
+    <p><strong>Red flag:</strong> Confuses the host with the SDK's Client, or can't separate "discovery" from "decision" as distinct responsibilities.</p>
+    <p><strong>Follow-up:</strong> "Which of these two jobs does the MCP protocol itself define, and which is pure application code?"</p>
+    <p><strong>What this proves:</strong> Understands where MCP's responsibility ends and host application logic begins.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>2. (Beginner) Why does this course's host example use keyword matching instead of a real LLM?</h2>
+    <p><strong>Strong answer:</strong> To keep the course runnable without an API key, while still teaching the real mechanics — discovery, invocation, and error handling are identical whether the "decide" step is a keyword lookup or a full model call. Only the decision-making itself would change.</p>
+    <p><strong>Red flag:</strong> Thinks the keyword-matching approach is somehow "not real MCP" or that a real host requires fundamentally different discovery/invocation code.</p>
+    <p><strong>Follow-up:</strong> "What would you need to change in ToyHost to plug in a real LLM call?"</p>
+    <p><strong>What this proves:</strong> Sees through the pedagogical simplification to the actual architecture underneath.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>3. (Intermediate) A host reports a tool call as successful, but the user says nothing actually happened. What's your first hypothesis, given this course's prior production scenarios?</h2>
+    <p><strong>Strong answer:</strong> The host likely isn't checking <code>result.is_error</code> after the call — this exact bug pattern has appeared in this course's Chapter 4, Chapter 6, and Chapter 7 production scenarios. A tool failure (bad arguments, a hallucinated tool name, an internal error) comes back as a normal, well-formed result with an error flag, not an exception — code that doesn't check the flag will treat it as success.</p>
+    <p><strong>Red flag:</strong> Jumps to server-side debugging without first checking whether the host itself is even inspecting the response correctly.</p>
+    <p><strong>Follow-up:</strong> "Write the one-line fix for a host function that currently does `return result.structured_content` unconditionally."</p>
+    <p><strong>What this proves:</strong> Recognizes a documented, repeated failure pattern rather than treating every bug as novel.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>4. (Intermediate) Should a host validate a tool name against the discovered catalog before calling it, even though the server will reject an unknown name anyway?</h2>
+    <p><strong>Strong answer:</strong> Yes — while the server will safely reject it (as a normal is_error result, not a crash), pre-validating lets the host give a clearer, faster error message without a round trip, and more importantly, catches the case in application logic where the source of the tool name (a model, a config file, user input) can't be fully trusted to only produce valid catalog entries. It's defense in depth, not redundant.</p>
+    <p><strong>Red flag:</strong> Argues validation is pointless because "the server checks anyway," missing the UX and defense-in-depth reasoning.</p>
+    <p><strong>Follow-up:</strong> "What's the cost of skipping this validation at scale, with a high-traffic host?"</p>
+    <p><strong>What this proves:</strong> Thinks about defensive coding in layered systems, not just "does it eventually get rejected somewhere."</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>5. (Senior) Design the caching strategy for a host's tool catalog. When do you re-discover?</h2>
+    <p><strong>Strong answer:</strong> Cache the catalog per server connection rather than re-fetching on every single decision (wasteful, and per Chapter 3, nothing about the stateless spec requires re-discovery per request — that's a host-level performance choice, not a protocol rule). Re-fetch when: the connection is re-established (a new client session), a server-sent notification indicates its catalog changed (if the server supports one), or after a configurable staleness window as a safety net for servers that don't notify. Never cache indefinitely with no invalidation path — a server's tools can change between deploys.</p>
+    <p><strong>Red flag:</strong> Either re-fetches on every call (unnecessary per Chapter 3's stateless semantics not requiring it) or caches forever with no invalidation strategy.</p>
+    <p><strong>Follow-up:</strong> "How would a host detect that a server's tool catalog changed without a notification mechanism?"</p>
+    <p><strong>What this proves:</strong> Balances correctness and performance in a caching design, connecting back to Chapter 3's stateless-but-not-uncacheable distinction.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>6. (Senior) A host needs to log every tool-call decision for audit purposes. What do you log, and what do you explicitly avoid logging?</h2>
+    <p><strong>Strong answer:</strong> Log the tool name called, a hash or truncated summary of arguments (full arguments may contain sensitive user data), the result's <code>is_error</code> status, and timing — enough to reconstruct "what happened" without necessarily capturing everything "what data was involved" in plaintext. Avoid logging full tool results by default if they could contain sensitive information the user provided or the tool retrieved (recall Chapter 5's caution about ungoverned prompt content — the same caution applies to logging tool outputs verbatim). Make verbose logging an explicit, opt-in debug mode, not the default.</p>
+    <p><strong>Red flag:</strong> Proposes logging everything verbatim by default with no consideration of what sensitive data might flow through tool calls.</p>
+    <p><strong>Follow-up:</strong> "How would this logging design need to change once Module 5 introduces permission scopes?"</p>
+    <p><strong>What this proves:</strong> Applies data-sensitivity judgment to an operational concern, foreshadowing the security module.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>7. (Architect) How would you design a host so the "decide" step (currently keyword matching, eventually an LLM) is swappable without touching discovery or invocation code?</h2>
+    <p><strong>Strong answer:</strong> Define a narrow interface for the decision step — something like a function or class taking the discovered tool catalog and a request, returning a tool name and arguments (or a "no decision" signal) — and keep discovery/invocation code entirely ignorant of how that decision was made. <code>ToyHost</code>'s <code>handle()</code> already hints at this separation but doesn't fully extract it; a production version would inject the decision-making component rather than hard-coding keyword logic inline, the way <code>discover()</code> and the invocation half of <code>handle()</code> stay stable regardless.</p>
+    <p><strong>Red flag:</strong> Doesn't recognize the value of this separation, or conflates "decide" and "invoke" as one inseparable step.</p>
+    <p><strong>Follow-up:</strong> "What would the interface look like for a decision-maker that needs to ask a clarifying question before deciding (an MRTR-style multi-round interaction, from Chapter 3)?"</p>
+    <p><strong>What this proves:</strong> Designs for the eventual real implementation from day one, rather than writing throwaway toy code that has to be rewritten entirely later.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>8. (Architect) Your host connects to servers owned by different teams, some more trustworthy than others. Does the host's discover/decide/invoke loop need to change based on server trust level?</h2>
+    <p><strong>Strong answer:</strong> Yes, meaningfully — a host shouldn't treat every discovered tool identically regardless of source. At minimum: tool descriptions from a lower-trust server shouldn't be blindly fed into the decision-making step with the same weight as a vetted internal server's (descriptions are natural-language text that could attempt to manipulate a model's tool-selection, foreshadowing Chapter 10's prompt-injection content), and invocation might warrant different confirmation/audit requirements per trust level. This isn't something MCP's protocol handles for you — it's host-level policy the architecture needs to make room for explicitly, not bolt on later.</p>
+    <p><strong>Red flag:</strong> Treats all connected servers as equally trustworthy by default, with no differentiated handling.</p>
+    <p><strong>Follow-up:</strong> "Where in the ToyHost design from this chapter would you insert a trust-level check?"</p>
+    <p><strong>What this proves:</strong> Anticipates the security module's concerns architecturally, before being told to, rather than treating security as an afterthought bolted onto a finished design.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="practice/index.html">&larr; Practice Bank</a>
+    <a href="project/index.html">Build the Project &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>
