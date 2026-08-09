@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Permissions, Scopes & Sandboxing Interview Questions — MCP for Everyone</title>
+<meta name="description" content="Interview questions for Permissions, Scopes & Sandboxing.">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-09">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="practice/index.html">&larr; Back to practice bank</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 9 Interview Questions</span>
+    <span class="reading-time">~15 min</span>
+  </div>
+  <h1>Interview Questions: Permissions, Scopes & Sandboxing</h1>
+  <p>Grouped by level. Each includes a strong answer, a red flag, and a follow-up.</p>
+
+  <div class="lesson-card">
+    <h2>1. (Beginner) Does MCP provide any built-in permission checking?</h2>
+    <p><strong>Strong answer:</strong> No. MCP standardizes the connection and calling mechanism; permission enforcement (who can call which tool) is entirely application code a server or host builds on top, using whatever pattern fits (a decorator, middleware, infrastructure-level access control).</p>
+    <p><strong>Red flag:</strong> Assumes MCP has a built-in ACL or permission system.</p>
+    <p><strong>Follow-up:</strong> "If MCP doesn't provide this, why do you think it's still worth standardizing the protocol?"</p>
+    <p><strong>What this proves:</strong> Understands this chapter's central point, consistent with Chapter 1's "what MCP doesn't solve" section.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>2. (Beginner) What happens when a scope check inside a tool fails?</h2>
+    <p><strong>Strong answer:</strong> A raised PermissionError (or similar) comes back as a normal is_error=True result — exactly the same mechanism as any other tool failure covered throughout this course, not a distinct "access denied" protocol response.</p>
+    <p><strong>Red flag:</strong> Assumes there's a special protocol-level error type for permission denials.</p>
+    <p><strong>Follow-up:</strong> "How would a host distinguish a permission denial from a validation error, if it wanted to?"</p>
+    <p><strong>What this proves:</strong> Connects this chapter's error handling to the pattern established since Chapter 3.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>3. (Intermediate) Why is a caller-supplied scope claim, with no verification, not a real security boundary?</h2>
+    <p><strong>Strong answer:</strong> If a caller can simply state what scopes it has and be believed, anyone can claim any scope — there's no actual restriction, just a formality. A real security boundary requires the scope to come from something the caller can't forge: verified authentication (a signed token, an authenticated session) that a trusted layer establishes independently of what the caller says about itself.</p>
+    <p><strong>Red flag:</strong> Doesn't distinguish "the caller says it has scope X" from "the system verified the caller has scope X."</p>
+    <p><strong>Follow-up:</strong> "In this chapter's demo code, is the scope trustworthy? Why or why not?"</p>
+    <p><strong>What this proves:</strong> Understands the difference between a real access control and a purely cosmetic one — and can apply it self-critically to the chapter's own simplified example.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>4. (Intermediate) A tool is supposed to be read-only, and its code only ever issues read operations. Is that sufficient to guarantee it can't cause a write?</h2>
+    <p><strong>Strong answer:</strong> No — per this chapter's production scenario, if the tool connects with credentials that have write access, a bug or injection that causes unintended behavior (e.g., a malformed or manipulated query) can still write, because the actual constraint enforced by the code is not backed by an infrastructure-level guarantee. True read-only enforcement requires read-only credentials/permissions at the infrastructure level, not just code that happens to only write read logic today.</p>
+    <p><strong>Red flag:</strong> Believes correct application code alone is sufficient without infrastructure-level backup.</p>
+    <p><strong>Follow-up:</strong> "What's the minimal infrastructure change that would have prevented this chapter's production scenario?"</p>
+    <p><strong>What this proves:</strong> Recognizes defense-in-depth as necessary, not redundant, especially against injection-class failures.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>5. (Senior) Design the scope taxonomy for an MCP server exposing 15 tools across notes, calendar, and email capabilities.</h2>
+    <p><strong>Strong answer:</strong> Group by resource and action (e.g., <code>notes:read</code>, <code>notes:write</code>, <code>calendar:read</code>, <code>email:send</code>) rather than per-tool scopes, which would create 15 granular scopes that are hard to reason about and grant. Group related tools under the same scope only when they genuinely have the same risk level — sending an email is a fundamentally different risk than reading one, and should never share a scope even though both are "email" operations. Avoid one broad scope covering everything ("full access") as the default grant — that defeats the purpose.</p>
+    <p><strong>Red flag:</strong> Proposes either one scope per tool (unwieldy) or one scope for everything (defeats least privilege), without a principled grouping rationale.</p>
+    <p><strong>Follow-up:</strong> "How would you handle a new 16th tool that doesn't cleanly fit your existing scope categories?"</p>
+    <p><strong>What this proves:</strong> Can design a scope taxonomy that's both usable and genuinely restrictive — a real architecture skill, not just implementing a single check.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>6. (Senior) How would you test that your permission system actually enforces what you think it enforces?</h2>
+    <p><strong>Strong answer:</strong> Explicit negative tests — for every scoped tool, a test that calls it with insufficient scope and asserts <code>is_error=True</code>, not just tests that confirm the happy path works with correct scope. This chapter's own validation followed exactly this pattern (three scenarios: no scope, wrong scope, correct scope) — a permission system with only positive tests can silently regress to "always allow" without any test catching it.</p>
+    <p><strong>Red flag:</strong> Only proposes testing that authorized calls succeed, missing that denial-path testing is the more important half for a security control.</p>
+    <p><strong>Follow-up:</strong> "How would you make sure a new tool added later doesn't accidentally ship without a scope check at all?"</p>
+    <p><strong>What this proves:</strong> Tests security controls the way security controls actually need to be tested — for failure to deny, not just failure to allow.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>7. (Architect) Design the permission architecture for an MCP platform serving multiple internal teams, each with servers exposing tools of varying sensitivity.</h2>
+    <p><strong>Strong answer:</strong> Centralize identity verification and scope-granting (a real auth provider, per the SDK's <code>AuthSettings</code>/<code>authenticated_principal</code> mechanism, or an org-wide identity provider) rather than letting each server invent its own ad hoc scope system — consistency matters for auditability and for callers that need to interact with multiple servers. Require every server to declare its tools' required scopes in a discoverable, reviewable way (not just buried in code), so a security review can audit the whole platform's permission surface without reading every server's source. Sandboxing/infrastructure-level enforcement (per this chapter's production scenario) should be a platform-level requirement for sensitive operations, not something individual teams opt into inconsistently.</p>
+    <p><strong>Red flag:</strong> Lets each team build its own incompatible permission system with no platform-level consistency or auditability.</p>
+    <p><strong>Follow-up:</strong> "How would you retrofit this onto servers that already exist with no permission checks at all, per this chapter's opening hook?"</p>
+    <p><strong>What this proves:</strong> Designs permission architecture as a platform capability, not a per-server afterthought — genuine architect-level thinking.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>8. (Architect) A tool needs elevated scope only for a rare, specific operation (e.g., a bulk delete used once a quarter). How do you avoid granting that elevated scope broadly?</h2>
+    <p><strong>Strong answer:</strong> Consider time-bound or request-scoped elevation rather than a standing grant — a caller requests temporary elevated access for a specific justified action, which is granted, used, and expires, rather than holding a permanent broad scope "just in case." This connects to Chapter 3's Multi Round-Trip Requests pattern: a tool could return an <code>input_required</code> result requesting explicit elevated authorization before proceeding, rather than either always allowing (unsafe) or requiring a permanent broad grant (violates least privilege). The audit trail from this kind of just-in-time elevation is also far more useful than a standing grant that's active 99.9% of the time it's not needed.</p>
+    <p><strong>Red flag:</strong> Defaults to "just grant the elevated scope permanently, it's simpler," missing the security and auditability cost of standing broad grants.</p>
+    <p><strong>Follow-up:</strong> "What would the user experience look like for this kind of just-in-time elevation, from the perspective of someone using a host application?"</p>
+    <p><strong>What this proves:</strong> Connects security architecture to protocol mechanics already covered (MRTR from Chapter 3), showing integrated systems thinking rather than treating each chapter's content in isolation.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="practice/index.html">&larr; Practice Bank</a>
+    <a href="project/index.html">Build the Project &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

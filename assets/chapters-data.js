@@ -170,7 +170,16 @@ window.MFE_MODULES = [
         id: "chapter-09",
         num: 9,
         title: "Permissions, Scopes & Sandboxing",
-        description: "Least privilege for tool access."
+        path: "chapters/chapter-09-permissions-scopes-sandboxing/lesson.html",
+        description: "Enforce least privilege on MCP tools with a real, tested scope-checking pattern.",
+        subtopics: [
+          { id: "hook", title: "What every tool in this course has assumed" },
+          { id: "least-privilege", title: "Least privilege, concretely" },
+          { id: "scope-decorator", title: "Build: a scope-enforcing decorator" },
+          { id: "real-auth", title: "What a production system uses instead" },
+          { id: "sandboxing", title: "Sandboxing: the other half of containment" },
+          { id: "recap", title: "Points to remember" }
+        ]
       },
       {
         id: "chapter-10",

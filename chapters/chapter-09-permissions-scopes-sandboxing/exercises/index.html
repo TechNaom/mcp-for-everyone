@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Permissions, Scopes & Sandboxing Exercises — MCP for Everyone</title>
+<meta name="description" content="Hands-on exercises for Permissions, Scopes & Sandboxing.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-09">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../quiz.html">&larr; Back to the quiz</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 9 Exercises</span>
+    <span class="reading-time">~25 min</span>
+  </div>
+  <h1>Exercises: Permissions, Scopes & Sandboxing</h1>
+  <p>Extend the scope-checking pattern with a distinct delete scope, and
+  build a proper test harness for it.</p>
+
+  <div class="what-is">
+    <span class="label">How to run these</span>
+    <pre><code>pip install "mcp[cli]"
+cd chapters/chapter-09-permissions-scopes-sandboxing/exercises
+python solution.py   # or fill starter.py first</code></pre>
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">1</span> Add a delete scope</h3>
+    <p>Implement <code>delete_note</code> requiring <code>notes:delete</code>,
+    distinct from <code>notes:write</code>, per TODO 1.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">2</span> (Production-gear) Build a safe test helper</h3>
+    <p>Implement <code>try_call</code> per TODO 2, using
+    <code>try</code>/<code>finally</code> to guarantee the scope resets
+    even if the call raises. Why does this matter for a test suite that
+    runs many scope combinations in sequence?</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">3</span> (Production-gear) Test the scope boundary</h3>
+    <p>Confirm write-only access can save but not delete, per TODO 3.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">4</span> (Production-gear) Test the negative space</h3>
+    <p>Write a test confirming a caller with ONLY <code>notes:read</code>
+    can list notes but can call neither <code>save_note</code> nor
+    <code>delete_note</code>. This is the "deny by default" case — the
+    most important one to test, per this chapter's senior interview
+    question on testing permission systems.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">5</span> Add a fourth scope</h3>
+    <p>Add a <code>search_notes(query: str) -> list[str]</code> tool.
+    Should it require <code>notes:read</code>, a new scope, or no scope
+    at all? Justify your choice.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">6</span> (Production-gear) Find the missing check</h3>
+    <p>Add a fifth tool WITHOUT a <code>@require_scope</code> decorator
+    by mistake (simulate forgetting one). Write a test that would catch
+    this specific mistake automatically — a tool shipped with no scope
+    check at all — before it reaches production.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../quiz.html">&larr; Back to Quiz</a>
+    <a href="../practice/index.html">Practice Bank &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

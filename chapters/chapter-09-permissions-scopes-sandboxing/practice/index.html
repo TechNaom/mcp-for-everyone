@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Permissions, Scopes & Sandboxing Practice Bank — MCP for Everyone</title>
+<meta name="description" content="Practice bank for Permissions, Scopes & Sandboxing.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-09">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../exercises/index.html">&larr; Back to exercises</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 9 Practice Bank</span>
+    <span class="reading-time">~20 min</span>
+  </div>
+  <h1>Practice Bank: Permissions, Scopes & Sandboxing</h1>
+  <p>Real security-adjacent judgment calls, not just "does the check pass."</p>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Security</span>
+    <h3>The scope that grew</h3>
+    <p>A tool originally needed <code>notes:read</code> only. Six months
+    later, a small feature addition made it also need
+    <code>notes:write</code> occasionally. The scope requirement was
+    quietly widened to always require both. What's the risk in this kind
+    of gradual scope creep, and what review practice would catch it?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Compliance</span>
+    <h3>The audit question</h3>
+    <p>An auditor asks: "can you prove that only authorized users could
+    have deleted this data?" Using this chapter's scope pattern plus
+    Chapter 7's logging discussion, what would you need to have in place
+    to answer confidently?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Support</span>
+    <h3>The confusing denial</h3>
+    <p>A user says "the assistant won't let me delete my note, it just
+    says an error happened." Given that permission denials look like any
+    other <code>is_error=True</code> result, how should a host
+    distinguish and communicate a permission denial specifically, rather
+    than showing a generic error?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Operations</span>
+    <h3>The sandboxing gap</h3>
+    <p>A file-processing tool correctly checks scopes before running, but
+    once it runs, it can read any file on the server's filesystem. Is
+    this a scope problem or a sandboxing problem? What's the fix?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Cost</span>
+    <h3>The expensive scope check</h3>
+    <p>A production system's scope check calls out to a remote
+    authorization service on every single tool call, adding meaningful
+    latency. What caching strategy would you consider, and what security
+    trade-off does caching a permission decision introduce?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Eval</span>
+    <h3>The permission regression</h3>
+    <p>A refactor accidentally removes a <code>@require_scope</code>
+    decorator from one tool during a large code cleanup. No functional
+    test catches it, because the tool still works correctly when called
+    with the right scope. What kind of test specifically would catch
+    this regression?</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../exercises/index.html">&larr; Exercises</a>
+    <a href="../interview-questions.html">Interview Questions &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

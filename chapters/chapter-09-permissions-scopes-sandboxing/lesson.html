@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Permissions, Scopes & Sandboxing — MCP for Everyone</title>
+<meta name="description" content="Enforce least privilege on MCP tools with a real, tested scope-checking pattern.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-09">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../../index.html">&larr; Back to all chapters</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 9</span>
+    <span class="badge-difficulty">Advanced</span>
+    <span class="reading-time">~35 min</span>
+  </div>
+
+  <h1>Permissions, Scopes & Sandboxing</h1>
+  <p class="lede">
+    Chapter 1 promised this from day one: standardizing a tool's
+    interface does nothing for its safety. This is the chapter that
+    finally builds least-privilege enforcement — tested, not just
+    described.
+  </p>
+
+  <nav class="page-toc" aria-label="On this page">
+    <span class="toc-label">On this page</span>
+    <a href="#hook">1. What every tool in this course has assumed</a>
+    <a href="#least-privilege">2. Least privilege, concretely</a>
+    <a href="#scope-decorator">3. Build: a scope-enforcing decorator</a>
+    <a href="#real-auth">4. What a production system uses instead</a>
+    <a href="#sandboxing">5. Sandboxing: the other half of containment</a>
+    <a href="#production">6. Production scenario: the tool with too much reach</a>
+    <a href="#mistakes">7. Common mistakes</a>
+    <a href="#thought-process">8. Builder thought process</a>
+    <a href="#recap">9. Points to remember</a>
+    <a href="#cheat-sheet">10. Cheat sheet</a>
+  </nav>
+
+  <div class="hook" id="hook">
+    <p>
+      Every tool built in this course so far — save a note, add a
+      bookmark, delete anything — has run with zero permission checks.
+      Anyone who can reach the server can call anything on it. That's
+      fine for a learning exercise; it would be a serious problem for a
+      tool that touches real customer data, sends messages, or spends
+      money. This chapter builds the missing piece: scoping which
+      caller can invoke which tool, tested with both a denial and an
+      approval to confirm it actually enforces something.
+    </p>
+  </div>
+
+  <section id="least-privilege" class="subtopic">
+    <h2>Least Privilege, Concretely</h2>
+    <div class="what-is">
+      <span class="label">What is... least privilege?</span>
+      A caller should be able to do exactly what it needs, and nothing
+      more. For an MCP server, that means: a caller with a "read notes"
+      grant should be able to call <code>list_notes</code> but not
+      <code>delete_note</code> — even though both are just Python
+      functions on the same server, equally reachable over the wire.
+    </div>
+    <p>
+      MCP itself defines no permission model — Chapter 1 was explicit
+      about this. What follows is one concrete pattern for building one
+      yourself, not a protocol feature.
+    </p>
+  </section>
+
+  <section id="scope-decorator" class="subtopic">
+    <h2>Build: A Scope-Enforcing Decorator</h2>
+    <p>
+      A decorator that checks a required scope against the calling
+      context's granted scopes before letting a tool run:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">scoped_notes.py</span>
+      </div>
+      <pre><code>import functools
+from contextvars import ContextVar
+
+current_scopes: ContextVar[frozenset[str]] = ContextVar(
+    "current_scopes", default=frozenset()
+)
+
+def require_scope(scope: str):
+    def decorator(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            if scope not in current_scopes.get():
+                raise PermissionError(f"missing required scope '{scope}'")
+            return fn(*args, **kwargs)
+        wrapper._required_scope = scope  # lets tooling introspect this later
+        return wrapper
+    return decorator
+
+mcp = MCPServer("scoped-notes")
+
+@mcp.tool()
+@require_scope("notes:read")
+def list_notes() -> list[str]:
+    """List note titles."""
+    return list(_NOTES.keys())
+
+@mcp.tool()
+@require_scope("notes:write")
+def delete_note(title: str) -> str:
+    """Delete a note by title."""
+    _NOTES.pop(title, None)
+    return f"deleted {title}"</code></pre>
+    </div>
+    <p>Running this with three different granted-scope sets:</p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">output</span>
+      </div>
+      <pre><code>no scope -> is_error: True  "missing required scope 'notes:write'"
+read-only scope, write tool -> is_error: True  "missing required scope 'notes:write'"
+read-only scope, read tool -> is_error: False  {'result': []}</code></pre>
+    </div>
+    <p>
+      Notice the failure mode: a <code>PermissionError</code> raised
+      inside a tool comes back exactly the way every other tool error
+      has throughout this course — a normal <code>is_error=True</code>
+      result, not a special "access denied" protocol feature. Permission
+      enforcement is application logic riding on the same error-reporting
+      mechanism as any other tool failure.
+    </p>
+  </section>
+
+  <section id="real-auth" class="subtopic">
+    <h2>What a Production System Uses Instead</h2>
+    <p>
+      The <code>current_scopes.set(...)</code> calls in this chapter's
+      tests set the caller's scope directly, because there's no real
+      caller — it's a test script. In production, that scope has to come
+      from somewhere trustworthy: real authentication. The SDK has actual
+      support for this — an <code>AuthSettings</code> object on
+      <code>mcp.settings.auth</code>, and helpers like
+      <code>authenticated_principal()</code> that read verified identity
+      from the request context, tied into an OAuth-style authorization
+      flow for HTTP transports (per the spec's own guidance: "implementations
+      using an HTTP-based transport SHOULD conform to [the] Authorization
+      framework"). Setting up a full OAuth authorization server is out of
+      scope for this course's exercises, but the pattern is the same
+      shape: some trusted layer determines the caller's granted scopes,
+      and <code>require_scope</code>-style checks enforce them per tool —
+      swap the contextvar for a real verified token, and this chapter's
+      decorator doesn't need to change.
+    </p>
+  </section>
+
+  <section id="sandboxing" class="subtopic">
+    <h2>Sandboxing: The Other Half of Containment</h2>
+    <p>
+      Scopes control <em>who can call what</em>. Sandboxing controls
+      <em>what a tool can reach once it's called</em> — even a properly
+      authorized tool call shouldn't have unrestricted filesystem, network,
+      or process access if it doesn't need it. A file-reading tool that's
+      supposed to read from one specific directory but runs with the same
+      privileges as the whole server process can be tricked (via a path
+      like <code>../../etc/passwd</code>) into reading anything the
+      process can access — the tool's own input validation is the only
+      thing standing between "read this one directory" and "read anything."
+      Real sandboxing options include running tools in restricted
+      subprocesses, containers with limited filesystem/network access, or
+      OS-level permission restrictions — implementation specifics beyond
+      this chapter's scope, but the principle is the same as scoping:
+      grant the minimum reach a tool actually needs.
+    </p>
+  </section>
+
+  <section id="production" class="subtopic">
+    <h2>Production Scenario: The Tool With Too Much Reach</h2>
+    <p>
+      A support-tooling team built a "run diagnostic query" tool against
+      their production database, intended for read-only troubleshooting.
+      The tool's own code only ever issued <code>SELECT</code>
+      statements — but it connected using the same database credentials
+      as the main application, which had full read/write access. A
+      prompt-injection-adjacent incident (a user's diagnostic request
+      contained text that, when incorporated into a query, executed an
+      unintended write) caused real data changes, because nothing at the
+      infrastructure level actually restricted the tool to read-only
+      access — the restriction existed only in the tool's own code, which
+      turned out to be exactly the layer that failed. The fix was
+      infrastructure-level: a separate, genuinely read-only database
+      credential for this tool, so even a successful injection couldn't
+      write data. This is sandboxing's core lesson: don't rely solely on
+      a tool's own code to enforce a restriction that infrastructure can
+      enforce more reliably.
+    </p>
+  </section>
+
+  <section id="mistakes" class="subtopic">
+    <h2>Common Mistakes</h2>
+    <ul>
+      <li>Assuming MCP provides permission enforcement — it doesn't;
+      every example in this chapter is application code layered on top.</li>
+      <li>Trusting a caller-supplied scope without verifying it against
+      real authentication — a scope that's just "whatever the caller
+      claims" isn't a security boundary at all.</li>
+      <li>Enforcing a restriction (like read-only access) only in a
+      tool's own code, when the underlying infrastructure (database
+      credentials, filesystem permissions) could enforce it more
+      reliably — see this chapter's production scenario.</li>
+      <li>Granting broad scopes "to be safe" against future needs — this
+      is the inverse of least privilege, and it's exactly what makes an
+      eventual injection or bug more damaging than it needed to be.</li>
+    </ul>
+  </section>
+
+  <section id="thought-process" class="subtopic">
+    <h2>Builder Thought Process</h2>
+    <div class="thinking-box">
+      <p><strong>Problem:</strong> demonstrate real least-privilege
+      enforcement on MCP tools, testably, without requiring a full OAuth
+      server setup this course can't reasonably ask learners to stand up.</p>
+      <p><strong>Assumptions:</strong> a contextvar-based scope check is
+      a faithful simplification of "some trusted layer determines caller
+      scope" — the mechanism for determining scope changes in production,
+      but the enforcement pattern (check before running) doesn't.</p>
+      <p><strong>Validation:</strong> ran three real scenarios — no
+      scope, wrong scope, correct scope — against actual tool calls and
+      confirmed each produced the expected allow/deny outcome.</p>
+      <p><strong>Observed consistency:</strong> a permission denial comes
+      back through the exact same <code>is_error=True</code> channel as
+      every other tool failure in this course — no special protocol
+      feature needed.</p>
+      <p><strong>Decision:</strong> be explicit in the lesson about where
+      the simplification is (identity verification) and where it isn't
+      (the enforcement pattern itself), rather than either oversimplifying
+      security or requiring infrastructure this course can't provide.</p>
+    </div>
+  </section>
+
+  <section id="recap" class="subtopic">
+    <div class="points-to-remember">
+      <h2>Points To Remember</h2>
+      <ul>
+        <li>MCP defines no permission model — every scope-checking
+        pattern in this chapter is application code, not a protocol
+        feature.</li>
+        <li>A permission denial surfaces through the same
+        <code>is_error=True</code> mechanism as any other tool failure —
+        no special protocol-level "denied" response exists.</li>
+        <li>Scopes control who can call what; sandboxing controls what a
+        tool can reach once called — both matter, and neither substitutes
+        for the other.</li>
+        <li>Enforcing a restriction only in a tool's own code, when
+        infrastructure (credentials, filesystem permissions) could
+        enforce it more reliably, is a real and common production
+        mistake.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="cheat-sheet" class="subtopic">
+    <div class="what-is">
+      <span class="label">Cheat sheet</span>
+      <pre><code>current_scopes: ContextVar[frozenset[str]] = ContextVar(..., default=frozenset())
+
+def require_scope(scope: str):
+    def decorator(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            if scope not in current_scopes.get():
+                raise PermissionError(f"missing required scope '{scope}'")
+            return fn(*args, **kwargs)
+        wrapper._required_scope = scope   # enables the audit tool (Ch.9 project)
+        return wrapper
+    return decorator
+
+@mcp.tool()
+@require_scope("resource:action")
+def my_tool(...): ...
+
+# Production: set current_scopes from VERIFIED identity
+# (mcp.settings.auth / authenticated_principal()), never from
+# an unverified caller-supplied claim.</code></pre>
+    </div>
+  </section>
+
+  <div class="what-is">
+    <span class="label">Interview questions (4 levels)</span>
+    See <a href="interview-questions.html">Chapter 9 interview questions</a>.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../../index.html">&larr; All Chapters</a>
+    <a href="quiz.html">Take the Quiz &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+    <span><a href="https://github.com/technaom/mcp-for-everyone">github.com/technaom/mcp-for-everyone</a></span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>
