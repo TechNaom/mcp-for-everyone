@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transports Practice Bank — MCP for Everyone</title>
+<meta name="description" content="Practice bank for Transports: stdio vs. Streamable HTTP.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-06">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../exercises/index.html">&larr; Back to exercises</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 6 Practice Bank</span>
+    <span class="reading-time">~20 min</span>
+  </div>
+  <h1>Practice Bank: Transports</h1>
+  <p>Deployment and operational judgment for transport choices.</p>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Operations</span>
+    <h3>The mystery session errors</h3>
+    <p>A team reports intermittent "session not found" errors from their
+    Streamable HTTP server after a routine deploy that added a second
+    instance. Using this chapter's production scenario, what's your
+    first hypothesis, and what would you check to confirm it?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Cost</span>
+    <h3>The always-on server</h3>
+    <p>Compare the operating cost of a stdio-based tool (only runs while
+    a client has it open) versus a Streamable HTTP server (must run
+    continuously to be reachable). What does this mean for a
+    rarely-used internal tool?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Security</span>
+    <h3>The exposed port</h3>
+    <p>A Streamable HTTP server was deployed with the port open to the
+    public internet "temporarily," for testing. Independent of
+    authentication (Module 5 territory), what transport-level exposure
+    does this create that a stdio server never would?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Debugging</span>
+    <h3>The client that "can't connect"</h3>
+    <p>A developer reports their client can't reach a Streamable HTTP
+    server. List three transport-layer things you'd check before
+    assuming it's an MCP-specific bug (hint: most of this isn't
+    MCP-specific at all).</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Support</span>
+    <h3>The SDK-version mismatch</h3>
+    <p>A colleague on an older SDK version says <code>stateless_http</code>
+    isn't a recognized parameter for them. What does this suggest about
+    how you should present SDK-specific defaults like this one in
+    internal documentation — as permanent facts, or as something to
+    verify per-version?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Eval</span>
+    <h3>The transport-agnostic test suite</h3>
+    <p>Your team wants one test suite that runs against both a stdio and
+    a Streamable HTTP instance of the same server, to make sure behavior
+    is identical either way. What's one thing that's easy to test
+    identically across both, and one thing that genuinely differs and
+    needs separate test logic?</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../exercises/index.html">&larr; Exercises</a>
+    <a href="../interview-questions.html">Interview Questions &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

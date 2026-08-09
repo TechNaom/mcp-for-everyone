@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transports Exercises — MCP for Everyone</title>
+<meta name="description" content="Hands-on exercises for Transports: stdio vs. Streamable HTTP.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-06">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../quiz.html">&larr; Back to the quiz</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 6 Exercises</span>
+    <span class="reading-time">~25 min</span>
+  </div>
+  <h1>Exercises: Transports</h1>
+  <p>Run the notes server over the network, in both session-based and
+  stateless modes, and see the difference yourself.</p>
+
+  <div class="what-is">
+    <span class="label">How to run these</span>
+    <pre><code>pip install "mcp[cli]"
+cd chapters/chapter-06-transports/exercises
+
+# terminal 1
+python solution.py
+
+# terminal 2
+python client_check.py</code></pre>
+    Then repeat both with <code>--stateless</code> appended to compare.
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+    <a href="client_check.py">client_check.py</a>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">1</span> Run it over HTTP, session-based</h3>
+    <p>Complete TODO 1 in <code>starter.py</code>: run the server over
+    Streamable HTTP on port 8767 with default settings. Confirm
+    <code>client_check.py</code> can reach it.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">2</span> Add the stateless variant</h3>
+    <p>Complete TODO 2: add a <code>--stateless</code> branch running on
+    port 8768 with <code>stateless_http=True</code>.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">3</span> (Production-gear) Reproduce the 400</h3>
+    <p>With the session-based server running, use <code>curl</code>
+    directly (not <code>client_check.py</code>) to send a raw
+    <code>tools/list</code> request with no session header. Confirm you
+    get the same 400 the lesson showed. Then repeat against the stateless
+    server on port 8768 and confirm it succeeds.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">4</span> (Production-gear) Inspect the session header</h3>
+    <p>Look at the 400 response's headers from Task 3. It includes an
+    <code>mcp-session-id</code> the server generated even though it
+    rejected the request. What would a well-behaved client do with that
+    header on its next attempt?</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">5</span> (Production-gear) Pick a transport for a real scenario</h3>
+    <p>Your team is building a coding-agent plugin that runs entirely on
+    a developer's laptop, launched by their IDE. Which transport, and
+    why? Now suppose the same capability needs to be offered as a hosted
+    service to the whole company — does the answer change?</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">6</span> Compare startup complexity</h3>
+    <p>Count the extra decisions/config Streamable HTTP required that
+    stdio didn't (host, port, session mode). Is this complexity ever
+    worth paying for a purely local, single-user tool? Justify either
+    answer.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../quiz.html">&larr; Back to Quiz</a>
+    <a href="../practice/index.html">Practice Bank &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

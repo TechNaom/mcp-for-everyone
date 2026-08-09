@@ -75,7 +75,7 @@ window.MFE_MODULES = [
   {
     title: "Module 3 — Building MCP Servers",
     summary: "Hands-on server construction with the Python SDK.",
-    examPath: null, /* written when Module 3's chapters are complete */
+    examPath: "assessments/written-exams/module-3-exam.md",
     chapters: [
       {
         id: "chapter-04",
@@ -113,7 +113,16 @@ window.MFE_MODULES = [
         id: "chapter-06",
         num: 6,
         title: "Transports: stdio vs. Streamable HTTP",
-        description: "Choosing a transport and the stateful/stateless compatibility story."
+        path: "chapters/chapter-06-transports/lesson.html",
+        description: "Choosing a transport, and a tested gotcha: the SDK's Streamable HTTP defaults to session-based even under the stateless spec.",
+        subtopics: [
+          { id: "hook", title: "What stdio can't do" },
+          { id: "stdio-recap", title: "stdio: what it actually is" },
+          { id: "streamable-http", title: "Streamable HTTP: running it for real" },
+          { id: "the-gotcha", title: "The gotcha: stateless_http defaults to False" },
+          { id: "choosing", title: "Choosing a transport" },
+          { id: "recap", title: "Points to remember" }
+        ]
       }
     ]
   },

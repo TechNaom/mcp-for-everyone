@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transports Interview Questions — MCP for Everyone</title>
+<meta name="description" content="Interview questions for Transports: stdio vs. Streamable HTTP.">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-06">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="practice/index.html">&larr; Back to practice bank</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 6 Interview Questions</span>
+    <span class="reading-time">~15 min</span>
+  </div>
+  <h1>Interview Questions: Transports</h1>
+  <p>Grouped by level. Each includes a strong answer, a red flag, and a follow-up.</p>
+
+  <div class="lesson-card">
+    <h2>1. (Beginner) When would you use stdio instead of Streamable HTTP?</h2>
+    <p><strong>Strong answer:</strong> When the client and server run on the same machine and the client can launch the server as a subprocess — local dev tools, desktop AI assistants connecting to local integrations. No networking or port management needed.</p>
+    <p><strong>Red flag:</strong> Doesn't know that stdio requires the client to launch the server, or thinks stdio can be used for a server reachable by multiple independent clients.</p>
+    <p><strong>Follow-up:</strong> "Could two different host applications both connect to the same stdio server process at the same time?"</p>
+    <p><strong>What this proves:</strong> Understands stdio's fundamental one-client-launches-one-process constraint.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>2. (Beginner) What surprised you about testing Streamable HTTP with default settings?</h2>
+    <p><strong>Strong answer:</strong> A raw request with no session ID returned a 400 error, even though the current spec is described as stateless — the SDK's default (`stateless_http=False`) still uses session bookkeeping at the transport layer. Getting the spec's fully stateless behavior requires explicitly opting in.</p>
+    <p><strong>Red flag:</strong> Assumes "the spec is stateless" automatically means every SDK default matches that philosophy.</p>
+    <p><strong>Follow-up:</strong> "How would you have discovered this without reading this chapter?"</p>
+    <p><strong>What this proves:</strong> Internalizes the lesson's core message — verify SDK behavior directly, don't infer it from the spec's philosophy alone.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>3. (Intermediate) Why would a server behind a load balancer misbehave if deployed with default Streamable HTTP settings?</h2>
+    <p><strong>Strong answer:</strong> The default is session-based; a client's first request establishes a session on whichever instance handles it, and subsequent requests carrying that session ID need to reach the same instance (or a shared session store) to work correctly. A load balancer without session affinity will route follow-up requests to a different, unaware instance, producing session errors or inconsistent behavior — exactly the chapter's production scenario.</p>
+    <p><strong>Red flag:</strong> Doesn't connect session-based defaults to load-balancing behavior, or assumes any HTTP server is automatically fine behind any load balancer.</p>
+    <p><strong>Follow-up:</strong> "What are the two ways to fix this, and what's the trade-off between them?"</p>
+    <p><strong>What this proves:</strong> Connects a transport-layer detail to a concrete, common production deployment failure.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>4. (Intermediate) What's the practical difference between testing through the SDK's Client versus testing with a raw HTTP request?</h2>
+    <p><strong>Strong answer:</strong> The SDK's Client transparently handles session bookkeeping (and other transport mechanics), so calls through it succeed even against a session-based server without you noticing that sessions are involved at all. A raw request exposes what's actually happening on the wire — which is exactly how this chapter's `stateless_http` default was discovered. Testing only through the SDK's own client can hide behavior a different language's client, or a non-SDK integration, would actually hit.</p>
+    <p><strong>Red flag:</strong> Assumes SDK-client testing is equivalent to testing "the real wire behavior."</p>
+    <p><strong>Follow-up:</strong> "If your org has a Go service that needs to call this MCP server directly without the Python SDK, what would you need to verify first?"</p>
+    <p><strong>What this proves:</strong> Understands the difference between "works through our SDK" and "works as documented at the protocol level."</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>5. (Senior) You're choosing between stdio and Streamable HTTP for a new internal tool server. Walk through your decision process.</h2>
+    <p><strong>Strong answer:</strong> Start from deployment topology, not preference: will this server ever need to be reached by more than one independently-running host, or scaled across multiple instances? If yes, Streamable HTTP is required — stdio can't do this by design. If it's genuinely single-machine, single-consumer (a local dev tool, a per-user desktop integration), stdio is simpler with less operational surface (no port, no auth-at-the-network-layer concerns). The decision isn't about which is "more modern" — Streamable HTTP isn't strictly better, it's required for a different deployment shape.</p>
+    <p><strong>Red flag:</strong> Picks Streamable HTTP by default "because it's the production-grade option" without checking whether stdio's constraints actually apply to this use case.</p>
+    <p><strong>Follow-up:</strong> "Your local dev tool now needs to be shared with three other engineers on the same team. Does the transport choice change?"</p>
+    <p><strong>What this proves:</strong> Makes transport decisions from actual requirements, not a general modernity bias.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>6. (Senior) How would you write a test that would have caught the stateless_http default before it reached production?</h2>
+    <p><strong>Strong answer:</strong> An integration test that makes a raw HTTP request (not through the SDK's Client) with no session header and asserts on the response — either asserting it succeeds (if `stateless_http=True` is intended) or explicitly documenting/asserting the session requirement (if not). The key design principle: test the actual deployed configuration's wire behavior, not just "does the SDK's own client work," since the SDK client can mask exactly this kind of default-setting surprise.</p>
+    <p><strong>Red flag:</strong> Proposes only testing through the SDK's Client, missing that this is precisely the blind spot that let the gotcha go unnoticed in the first place.</p>
+    <p><strong>Follow-up:</strong> "Would this test belong in the server's own test suite, the deploying team's integration tests, or both?"</p>
+    <p><strong>What this proves:</strong> Translates a debugging discovery into a concrete, preventive testing practice.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>7. (Architect) Design the transport strategy for an org with both local developer tools and centrally-hosted production MCP servers.</h2>
+    <p><strong>Strong answer:</strong> Use stdio for anything genuinely local and single-user (dev tools, IDE integrations) — no reason to add network complexity there. For anything centrally hosted, standardize on Streamable HTTP with an explicit, documented default for `stateless_http` across the org (not left to each team to discover independently, the way this chapter's production scenario happened) — likely `stateless_http=True` paired with standard load balancing, since that scales more simply than managing session affinity across every deployed server. Document this as a platform standard, not a per-team decision, so the gotcha this chapter covers doesn't get independently rediscovered by every team that deploys their first Streamable HTTP server.</p>
+    <p><strong>Red flag:</strong> Treats transport choice as a purely per-server technical decision with no org-wide standardization, guaranteeing the same gotcha gets rediscovered repeatedly.</p>
+    <p><strong>Follow-up:</strong> "How would you enforce this standard — documentation, a shared server template, a CI check, or something else?"</p>
+    <p><strong>What this proves:</strong> Thinks about a technical gotcha as an organizational knowledge-sharing problem, not just a per-instance fix.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>8. (Architect) A security review asks whether Streamable HTTP's session mechanism (even in the non-stateless default) is a meaningful security boundary. How do you answer?</h2>
+    <p><strong>Strong answer:</strong> No — the session ID here is a connection/routing convenience the transport layer manages, not an authentication or authorization mechanism. Per the spec's own guidance on HTTP-based transports, implementations should use the actual Authorization framework (or a custom auth strategy) for identity and access control; the `Mcp-Session-Id`-style bookkeeping is orthogonal to that and shouldn't be treated as a security boundary by anyone building or reviewing a server. Conflating "has a session ID" with "is authenticated" would be a real security gap.</p>
+    <p><strong>Red flag:</strong> Suggests the session mechanism itself provides meaningful access control, or can't distinguish transport-layer session bookkeeping from authentication.</p>
+    <p><strong>Follow-up:</strong> "Where would you actually enforce authorization for a Streamable HTTP MCP server — and does the answer change between stateless_http=True and False?"</p>
+    <p><strong>What this proves:</strong> Doesn't let a transport-layer implementation detail get mistaken for a security control — sets up Module 5's security content correctly.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="practice/index.html">&larr; Practice Bank</a>
+    <a href="project/index.html">Build the Project &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

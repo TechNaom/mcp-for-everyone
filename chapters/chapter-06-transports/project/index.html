@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transports Project — MCP for Everyone</title>
+<meta name="description" content="Project for Transports: build a health-check probe for an MCP server.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-06">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../interview-questions.html">&larr; Back to interview questions</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 6 Project</span>
+    <span class="reading-time">~30 min · Level 1, Guided</span>
+  </div>
+  <h1>Build a Health-Check Probe</h1>
+  <p>The kind of script an ops team would actually wire into a load
+  balancer or monitoring system for a Streamable HTTP MCP server.</p>
+
+  <div class="hook">
+    <p>
+      "Is the port open" isn't the same as "is the server healthy" — a
+      process can accept TCP connections while its MCP-handling code is
+      deadlocked. This project checks the thing that actually matters:
+      can this server list and call a tool within a reasonable time.
+    </p>
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <h2>Build it</h2>
+  <p>
+    Implement <code>check_server(url)</code>: connect, call
+    <code>list_tools()</code>, treat zero tools as unhealthy, then call
+    the first tool with a timeout and treat a timeout as unhealthy. The
+    function must never raise — a health check that crashes the thing
+    calling it is worse than one that just reports unhealthy.
+  </p>
+
+  <div class="what-is">
+    <span class="label">Verification</span>
+    <pre><code># terminal 1
+python ../exercises/solution.py
+
+# terminal 2
+python solution.py http://127.0.0.1:8767/mcp
+# expect: HEALTHY, exit code 0
+
+# stop terminal 1, then:
+python solution.py http://127.0.0.1:8767/mcp
+# expect: UNHEALTHY (with a reason printed), exit code 1</code></pre>
+  </div>
+
+  <div class="what-is">
+    <span class="label">Extension challenge</span>
+    Add a <code>--json</code> flag that prints the result as
+    <code>{"healthy": true, "checked_at": "...", "tool_count": N}</code>
+    instead of plain text — the format a real monitoring system would
+    actually want to parse.
+  </div>
+
+  <div class="points-to-remember">
+    <h2>Why this project matters</h2>
+    <p>
+      Chapter 6's production scenario was caught by someone actually
+      testing wire behavior, not by a dashboard showing green. A real
+      health check that exercises an actual tool call — not just a TCP
+      connection — is exactly the kind of thing that would have caught
+      that class of problem before it hit users.
+    </p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../interview-questions.html">&larr; Interview Questions</a>
+    <a href="../../../index.html">All Chapters &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

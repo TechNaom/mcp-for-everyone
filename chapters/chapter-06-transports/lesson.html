@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transports: stdio vs. Streamable HTTP — MCP for Everyone</title>
+<meta name="description" content="Choosing a transport, and a real, tested gotcha: the SDK's Streamable HTTP defaults to session-based even under the stateless spec.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-06">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../../index.html">&larr; Back to all chapters</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 6</span>
+    <span class="badge-difficulty">Intermediate</span>
+    <span class="reading-time">~30 min</span>
+  </div>
+
+  <h1>Transports: stdio vs. Streamable HTTP</h1>
+  <p class="lede">
+    Every server so far ran over stdio, one process per client. This
+    chapter switches on Streamable HTTP for real — and uncovers a gotcha
+    in the SDK's defaults that isn't obvious from the spec alone.
+  </p>
+
+  <nav class="page-toc" aria-label="On this page">
+    <span class="toc-label">On this page</span>
+    <a href="#hook">1. What stdio can't do</a>
+    <a href="#stdio-recap">2. stdio: what it actually is</a>
+    <a href="#streamable-http">3. Streamable HTTP: running it for real</a>
+    <a href="#the-gotcha">4. The gotcha: stateless_http defaults to False</a>
+    <a href="#choosing">5. Choosing a transport</a>
+    <a href="#production">6. Production scenario: the load balancer that couldn't help</a>
+    <a href="#mistakes">7. Common mistakes</a>
+    <a href="#thought-process">8. Builder thought process</a>
+    <a href="#recap">9. Points to remember</a>
+    <a href="#cheat-sheet">10. Cheat sheet</a>
+  </nav>
+
+  <div class="hook" id="hook">
+    <p>
+      Every server you've built runs over stdio: one Python process,
+      launched by the client, talking over standard input/output. That's
+      how the MCP Inspector and Claude Desktop connect to local tools —
+      but it only works because the client can launch a subprocess on the
+      same machine. A server shared across a team, reachable from a web
+      app, or load-balanced across multiple instances needs a network
+      transport instead. That's Streamable HTTP — and getting it running
+      correctly surfaces a default setting that will genuinely surprise
+      you if you assumed the "stateless" spec meant "no sessions,
+      anywhere, ever."
+    </p>
+  </div>
+
+  <section id="stdio-recap" class="subtopic">
+    <h2>stdio: What It Actually Is</h2>
+    <p>
+      Per the spec: "newline-delimited messages over the standard
+      streams of a client-launched subprocess." The client starts your
+      Python script as a child process and talks to it over stdin/stdout
+      — this is why every <code>mcp.run(transport="stdio")</code> call
+      in this course has worked without any networking setup: there's no
+      network involved at all. One consequence worth internalizing:
+      <strong>the client always launches the server</strong>. You never
+      "connect" to a pre-running stdio server the way you'd connect to a
+      web server — the process only exists because a client started it.
+    </p>
+  </section>
+
+  <section id="streamable-http" class="subtopic">
+    <h2>Streamable HTTP: Running It For Real</h2>
+    <p>
+      Streamable HTTP is the other standard transport: a real HTTP
+      endpoint a pre-running server exposes, that any client can connect
+      to over the network. Switching Chapter 4's pattern to it is one
+      line:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">http_server.py</span>
+      </div>
+      <pre><code>from mcp.server import MCPServer
+
+mcp = MCPServer("http-demo")
+
+@mcp.tool()
+def ping() -> str:
+    """Simple health check tool."""
+    return "pong"
+
+if __name__ == "__main__":
+    mcp.run(transport="streamable-http", host="127.0.0.1", port=8765)</code></pre>
+    </div>
+    <p>
+      Connecting a client is just as simple — swap the in-memory
+      <code>Client(mcp)</code> pattern from every prior chapter for a URL:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">http_client.py</span>
+      </div>
+      <pre><code>import asyncio
+from mcp import Client
+
+async def main() -> None:
+    async with Client("http://127.0.0.1:8765/mcp") as client:
+        tools = await client.list_tools()
+        print("TOOLS:", [t.name for t in tools.tools])
+        result = await client.call_tool("ping", {})
+        print("RESULT:", result.structured_content)
+
+asyncio.run(main())</code></pre>
+    </div>
+    <p>Running both, in order, against the real server:</p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">output</span>
+      </div>
+      <pre><code>TOOLS: ['ping']
+RESULT: {'result': 'pong'}</code></pre>
+    </div>
+  </section>
+
+  <section id="the-gotcha" class="subtopic">
+    <h2>The Gotcha: <code>stateless_http</code> Defaults to False</h2>
+    <p>
+      Chapter 3 taught that the 2026-07-28 spec is stateless — no
+      session, every request self-contained. So a raw HTTP request to
+      the server above, without going through the SDK's client, should
+      just work, right? Testing it directly says otherwise:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">terminal — raw request, default settings</span>
+      </div>
+      <pre><code>$ curl -X POST http://127.0.0.1:8765/mcp \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json, text/event-stream" \
+    -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+
+HTTP/1.1 400 Bad Request
+mcp-session-id: 933dc6f70a134aa099b4e8b1fd8dc967
+{"jsonrpc":"2.0","id":null,"error":{"code":-32600,"message":"Bad Request: Missing session ID"}}</code></pre>
+    </div>
+    <p>
+      A 400, demanding a session ID — on a spec whose headline feature is
+      removing sessions. The explanation is in the SDK's own settings,
+      not the spec: <code>mcp.run(transport="streamable-http", ...)</code>
+      accepts a <code>stateless_http</code> parameter that
+      <strong>defaults to <code>False</code></strong>. The SDK's default
+      Streamable HTTP behavior is session-based — practical for
+      connection reuse and backward compatibility with tooling built
+      around the older session model — and you must opt in explicitly to
+      get the spec's fully stateless behavior:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">http_server.py — stateless</span>
+      </div>
+      <pre><code>mcp.run(
+    transport="streamable-http",
+    host="127.0.0.1",
+    port=8766,
+    stateless_http=True,   # <- opt in explicitly
+)</code></pre>
+    </div>
+    <p>
+      With that one flag added, the identical raw request — no session
+      ID anywhere — succeeds immediately:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">terminal — raw request, stateless_http=True</span>
+      </div>
+      <pre><code>HTTP/1.1 200 OK
+content-type: text/event-stream
+
+event: message
+data: {"jsonrpc":"2.0","id":1,"result":{"tools":[{"name":"ping", ...}]}}</code></pre>
+    </div>
+    <p>
+      The lesson here isn't "always set <code>stateless_http=True</code>."
+      It's that <strong>a spec being stateless doesn't mean every SDK
+      default follows it automatically</strong> — the SDK is free to make
+      a different practical trade-off by default, and only the docs (or,
+      as here, actually testing the raw wire behavior) will tell you
+      which one you're getting.
+    </p>
+  </section>
+
+  <section id="choosing" class="subtopic">
+    <h2>Choosing a Transport</h2>
+    <table>
+      <thead><tr><th>Question</th><th>Answer</th></tr></thead>
+      <tbody>
+        <tr><td>Client and server always on the same machine, client launches the server?</td><td>stdio</td></tr>
+        <tr><td>Server needs to be reachable over a network, by multiple clients, independently running?</td><td>Streamable HTTP</td></tr>
+        <tr><td>Server needs to run behind a load balancer, scale horizontally?</td><td>Streamable HTTP with <code>stateless_http=True</code> — session affinity to one instance defeats the point of load balancing</td></tr>
+        <tr><td>Simple local dev/debugging?</td><td>stdio — no ports, no network config</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="production" class="subtopic">
+    <h2>Production Scenario: The Load Balancer That Couldn't Help</h2>
+    <p>
+      A platform team deployed an MCP server behind a standard HTTP load
+      balancer, expecting requests to distribute evenly across three
+      instances. Under load, they saw wildly uneven distribution and
+      occasional session errors when an instance restarted. The cause:
+      the server ran with default (session-based) Streamable HTTP
+      settings, and the load balancer had no session affinity configured
+      — requests within one client session were landing on different
+      instances that didn't share session state, and the client's second
+      request in a session would hit an instance that had never seen the
+      session ID from the first. Two possible fixes existed: configure
+      session-affinity routing at the load balancer (matching the
+      session model the server was already using), or set
+      <code>stateless_http=True</code> and let any instance handle any
+      request, which is what they chose — it matched the horizontal
+      scaling goal directly instead of working around a default they
+      didn't need.
+    </p>
+  </section>
+
+  <section id="mistakes" class="subtopic">
+    <h2>Common Mistakes</h2>
+    <ul>
+      <li>Assuming "the spec is stateless" means every deployment
+      automatically behaves that way — the SDK's default is session-based;
+      verify, don't assume.</li>
+      <li>Deploying Streamable HTTP behind a load balancer without either
+      session affinity or <code>stateless_http=True</code> — pick one
+      deliberately, per the production scenario above.</li>
+      <li>Testing only through the SDK's own <code>Client</code>, which
+      handles session bookkeeping transparently — this can hide the
+      exact behavior a non-SDK caller (a different language's client, a
+      raw integration) would actually see.</li>
+      <li>Using stdio for a server that needs to be shared across
+      multiple independently-running clients — stdio is fundamentally
+      one-client-launches-one-process.</li>
+    </ul>
+  </section>
+
+  <section id="thought-process" class="subtopic">
+    <h2>Builder Thought Process</h2>
+    <div class="thinking-box">
+      <p><strong>Problem:</strong> confirm whether Chapter 3's "stateless
+      spec" claim actually holds when running Streamable HTTP with
+      default settings.</p>
+      <p><strong>Assumption going in:</strong> a raw request with no
+      session bookkeeping should just work, since the spec removed the
+      handshake.</p>
+      <p><strong>Test:</strong> ran the server with default settings and
+      sent a raw curl request with no session header.</p>
+      <p><strong>Observed failure:</strong> a 400 demanding a session ID —
+      contradicting the assumption.</p>
+      <p><strong>Investigation:</strong> inspected <code>mcp.run_streamable_http_async</code>'s
+      signature directly rather than guessing, and found
+      <code>stateless_http: bool = False</code> as an explicit default.</p>
+      <p><strong>Validation:</strong> re-ran the identical raw request
+      against a server started with <code>stateless_http=True</code> —
+      succeeded immediately, confirming the SDK setting, not the spec,
+      was the deciding factor.</p>
+      <p><strong>Decision:</strong> document this as a "check the SDK
+      default, don't assume the spec's philosophy" lesson, since it's
+      exactly the kind of gap that only shows up by testing the wire
+      behavior directly.</p>
+    </div>
+  </section>
+
+  <section id="recap" class="subtopic">
+    <div class="points-to-remember">
+      <h2>Points To Remember</h2>
+      <ul>
+        <li>stdio: one client-launched subprocess, no networking — the
+        transport every prior chapter used.</li>
+        <li>Streamable HTTP: a real network endpoint, reachable by
+        independently-running clients, required for shared/scaled
+        deployments.</li>
+        <li>The SDK's Streamable HTTP defaults to session-based
+        (<code>stateless_http=False</code>) even though the current spec
+        is stateless — confirmed by testing raw requests, not assumed
+        from the spec's philosophy.</li>
+        <li>Behind a load balancer, either configure session affinity or
+        set <code>stateless_http=True</code> — don't deploy without
+        deciding.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="cheat-sheet" class="subtopic">
+    <div class="what-is">
+      <span class="label">Cheat sheet</span>
+      <pre><code># stdio (local, one client launches one process)
+mcp.run(transport="stdio")
+
+# Streamable HTTP, session-based (SDK default)
+mcp.run(transport="streamable-http", host="0.0.0.0", port=8000)
+
+# Streamable HTTP, truly stateless (matches the 2026-07-28 spec)
+mcp.run(transport="streamable-http", host="0.0.0.0", port=8000,
+         stateless_http=True)
+
+# Client: swap Client(mcp) for a URL string, everything else identical
+Client("http://host:port/mcp")</code></pre>
+    </div>
+  </section>
+
+  <div class="what-is">
+    <span class="label">Interview questions (4 levels)</span>
+    See <a href="interview-questions.html">Chapter 6 interview questions</a>.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../../index.html">&larr; All Chapters</a>
+    <a href="quiz.html">Take the Quiz &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+    <span><a href="https://github.com/technaom/mcp-for-everyone">github.com/technaom/mcp-for-everyone</a></span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>
