@@ -4,6 +4,11 @@
    still clear enough for a first-time GenAI systems learner. */
 
 :root {
+  /* This is a light-themed page. Without this, some browsers and OS-level
+     dark-mode readers auto-invert colors per-element, which mismatches
+     the translucent card backgrounds against their (unchanged) dark text
+     and makes cards unreadable. */
+  color-scheme: light;
   --color-bg: #F6F7FB;
   --color-text: #171A21;
   --color-text-soft: #4B5160;
@@ -477,6 +482,32 @@ pre code {
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+/* ---------- Builder thought-process journal ---------- */
+.thinking-box {
+  background: rgba(234, 241, 252, 0.65);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(46, 107, 184, 0.25);
+  border-left: 6px solid var(--color-blue);
+  padding: 18px 24px;
+  border-radius: var(--radius);
+  margin: 22px 0;
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text);
+}
+
+.thinking-box p {
+  margin: 0 0 12px;
+}
+
+.thinking-box p:last-child {
+  margin-bottom: 0;
+}
+
+.thinking-box strong {
+  color: var(--color-navy);
 }
 
 .what-is .label::before {
@@ -1374,6 +1405,34 @@ footer.site-footer a {
 
 .download-links a::before {
   content: "⬇";
+}
+
+/* ---------- Interview-question cards ---------- */
+.lesson-card {
+  background: var(--color-card-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 18px 0;
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text);
+}
+
+.lesson-card h2 {
+  margin-top: 0;
+  font-size: 19px;
+  color: var(--color-navy);
+}
+
+.lesson-card p {
+  margin: 0 0 8px;
+  color: var(--color-text);
+}
+
+.lesson-card p:last-child {
+  margin-bottom: 0;
 }
 
 /* ---------- Exercise / project task cards ---------- */
