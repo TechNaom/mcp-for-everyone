@@ -21,7 +21,7 @@
   --color-green: #1E8E3E;
   --color-red: #C5221F;
   --color-teal: #0E7C86;
-  --color-card-bg: rgba(255, 255, 255, 0.62);
+  --color-card-bg: rgba(255, 255, 255, 0.92);
   --color-border: rgba(16, 27, 51, 0.10);
   --glass-blur: blur(18px);
   --glass-border: 1px solid rgba(255, 255, 255, 0.55);
@@ -460,7 +460,7 @@ pre code {
 }
 
 .what-is {
-  background: rgba(255, 248, 230, 0.65);
+  background: rgba(255, 248, 230, 0.92);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid rgba(245, 223, 160, 0.7);
@@ -486,7 +486,7 @@ pre code {
 
 /* ---------- Builder thought-process journal ---------- */
 .thinking-box {
-  background: rgba(234, 241, 252, 0.65);
+  background: rgba(234, 241, 252, 0.92);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid rgba(46, 107, 184, 0.25);
@@ -573,7 +573,7 @@ pre code {
 }
 
 .lesson-note {
-  background: rgba(255, 248, 230, 0.72);
+  background: rgba(255, 248, 230, 0.92);
   border-left: 4px solid var(--color-yellow-dark);
   padding: 12px 14px;
   border-radius: 10px;
@@ -614,7 +614,7 @@ pre code {
 
 /* Go Deeper collapsible section */
 details.go-deeper {
-  background: rgba(240, 244, 251, 0.6);
+  background: rgba(240, 244, 251, 0.92);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--color-border);
@@ -657,7 +657,7 @@ details.go-deeper summary:hover {
 
 /* Points to Remember */
 .points-to-remember {
-  background: linear-gradient(135deg, rgba(234, 247, 236, 0.7), rgba(243, 251, 243, 0.65));
+  background: linear-gradient(135deg, rgba(234, 247, 236, 0.94), rgba(243, 251, 243, 0.92));
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid rgba(190, 224, 190, 0.7);
@@ -837,7 +837,7 @@ button.check-btn:focus-visible,
   padding: 12px 16px;
   border: 2px solid var(--color-border);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.92);
   color: var(--color-text);
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
@@ -1841,7 +1841,7 @@ textarea.challenge-code:focus {
 
 /* ---------- Debug-the-code exercise cards ---------- */
 .debug-card {
-  background: rgba(255, 244, 243, 0.65);
+  background: rgba(255, 244, 243, 0.92);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid rgba(243, 198, 194, 0.7);
@@ -1858,7 +1858,7 @@ textarea.challenge-code:focus {
 
 /* ---------- Scenario-based (interview-style) practice cards ---------- */
 .scenario-card {
-  background: rgba(232, 246, 247, 0.65);
+  background: rgba(232, 246, 247, 0.92);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid rgba(14, 124, 134, 0.25);
@@ -2477,7 +2477,7 @@ body::before {
 }
 
 .quality-panel {
-  background: rgba(255, 248, 230, 0.72);
+  background: rgba(255, 248, 230, 0.92);
   border: 1px solid rgba(230, 168, 0, 0.22);
   border-radius: 10px;
   padding: 14px;
@@ -2513,7 +2513,7 @@ body::before {
 }
 
 .pros-cons > div {
-  background: rgba(255, 255, 255, 0.58);
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(16, 27, 51, 0.08);
   border-radius: 10px;
   padding: 14px 16px;
@@ -2587,7 +2587,7 @@ body::before {
 }
 
 .depth-panel {
-  background: rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(16, 27, 51, 0.10);
   border-radius: 14px;
   padding: 18px;
