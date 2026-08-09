@@ -453,6 +453,16 @@ pre code {
   position: relative;
 }
 
+/* The global `p, li { color: var(--color-text) }` rule targets <p>
+   directly, which beats inheriting .hook's white text (a rule matching
+   the element always wins over an inherited value, regardless of the
+   ancestor's specificity). Every dark callout box that contains <p> or
+   <li> needs this same explicit override. */
+.hook p,
+.hook li {
+  color: inherit;
+}
+
 .hook::before {
   content: "🎯";
   font-size: 22px;
