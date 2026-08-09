@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resources & Prompts — MCP for Everyone</title>
+<meta name="description" content="The other two MCP primitives: static and templated resources, and reusable prompts, tested against the real SDK.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-05">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../../index.html">&larr; Back to all chapters</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 5</span>
+    <span class="badge-difficulty">Intermediate</span>
+    <span class="reading-time">~30 min</span>
+  </div>
+
+  <h1>Resources & Prompts</h1>
+  <p class="lede">
+    Chapter 4 built tools. This chapter finishes the primitive set: static
+    and templated resources (and a distinction between them that will
+    trip you up if you don't know it), and prompts — the primitive most
+    tutorials skip.
+  </p>
+
+  <nav class="page-toc" aria-label="On this page">
+    <span class="toc-label">On this page</span>
+    <a href="#hook">1. The tool you shouldn't have built</a>
+    <a href="#static-vs-templated">2. Static vs. templated resources</a>
+    <a href="#the-gotcha">3. The gotcha: two separate lists</a>
+    <a href="#prompts">4. Prompts: the skipped primitive</a>
+    <a href="#when-to-use-what">5. Choosing the right primitive</a>
+    <a href="#production">6. Production scenario: the resource nobody could find</a>
+    <a href="#mistakes">7. Common mistakes</a>
+    <a href="#thought-process">8. Builder thought process</a>
+    <a href="#recap">9. Points to remember</a>
+    <a href="#cheat-sheet">10. Cheat sheet</a>
+  </nav>
+
+  <div class="hook" id="hook">
+    <p>
+      Say you're extending Chapter 4's notes server and someone adds a
+      tool called <code>get_app_config</code> that takes no arguments and
+      just returns a fixed string — theme settings, a version number,
+      nothing that ever changes based on input. It works. But calling it
+      a "tool" undersells what it actually is: it's not an action, it's
+      data the model should be able to load into context directly. That's
+      what a <strong>resource</strong> is for — and this chapter is about
+      using the right primitive for the right job, not just making
+      everything a tool because tools are what Chapter 4 taught first.
+    </p>
+  </div>
+
+  <section id="static-vs-templated" class="subtopic">
+    <h2>Static vs. Templated Resources</h2>
+    <p>
+      Chapter 4's <code>note://{title}</code> resource was
+      <strong>templated</strong> — the URI has a variable part, filled in
+      per call. Resources can also be <strong>static</strong> — a fixed
+      URI with no parameters, for something like app configuration:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">static vs. templated</span>
+      </div>
+      <pre><code>@mcp.resource("config://app")
+def get_config() -> str:
+    """Static app configuration, no parameters."""
+    return "theme=dark\nmax_notes=100"
+
+@mcp.resource("note://{title}")
+def get_note(title: str) -> str:
+    """Templated resource: read a note by title."""
+    return f"contents of {title}"</code></pre>
+    </div>
+  </section>
+
+  <section id="the-gotcha" class="subtopic">
+    <h2>The Gotcha: Two Separate Lists</h2>
+    <p>
+      Here's something that only shows up once you actually call the
+      client methods — confirmed by running exactly this server:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">output</span>
+      </div>
+      <pre><code>STATIC RESOURCES: [('config://app', 'get_config')]
+RESOURCE TEMPLATES: [('note://{title}', 'get_note')]</code></pre>
+    </div>
+    <p>
+      <code>client.list_resources()</code> and
+      <code>client.list_resource_templates()</code> are two
+      <strong>separate</strong> calls, returning two separate lists. A
+      client (or host) that only checks <code>list_resources()</code>
+      will never discover <code>note://{title}</code> — it'll look like
+      the server has no note-reading capability at all, even though
+      <code>read_resource("note://todo")</code> works perfectly fine once
+      you know the URI. This is exactly the kind of thing that produces a
+      confused bug report: "the server has resources but the host can't
+      see them."
+    </p>
+  </section>
+
+  <section id="prompts" class="subtopic">
+    <h2>Prompts: The Skipped Primitive</h2>
+    <div class="what-is">
+      <span class="label">What is... a Prompt?</span>
+      A reusable interaction template a host can surface to a user — not
+      something the model decides to call mid-conversation (like a tool),
+      but something a human explicitly picks, like a slash command or a
+      menu item. "Summarize this," "Review this PR" are prompts.
+    </div>
+    <p>
+      Declared the same way as tools and resources — decorator, type
+      hints, docstring:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">prompts.py</span>
+      </div>
+      <pre><code>@mcp.prompt()
+def summarize(text: str) -> str:
+    """Summarize a piece of text in one sentence."""
+    return f"Summarize the following text in one sentence:\n\n{text}"
+
+@mcp.prompt()
+def code_review(language: str, code: str) -> str:
+    """Generate a code review prompt for a snippet in a given language."""
+    return f"Review this {language} code for bugs and style issues:\n\n{code}"</code></pre>
+    </div>
+    <p>
+      Calling <code>client.get_prompt("summarize", {"text": "..."})</code>
+      doesn't run anything — it returns a structured message the host
+      hands to the model, confirmed by actually calling it:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">output</span>
+      </div>
+      <pre><code>description='Summarize a piece of text in one sentence.'
+messages=[PromptMessage(role='user', content=TextContent(
+    type='text',
+    text='Summarize the following text in one sentence:\n\na long article about mcp'
+))]
+result_type='complete'</code></pre>
+    </div>
+    <p>
+      A prompt function's return value (here, an f-string) becomes the
+      <code>text</code> of a <code>user</code>-role message — the server
+      is producing the exact text the host will send to the model, not
+      executing anything itself. That's the core distinction from tools:
+      a prompt returns text to be sent to a model; a tool runs code and
+      returns a result.
+    </p>
+  </section>
+
+  <section id="when-to-use-what" class="subtopic">
+    <h2>Choosing the Right Primitive</h2>
+    <table>
+      <thead><tr><th>Question</th><th>Answer &rarr; Primitive</th></tr></thead>
+      <tbody>
+        <tr><td>Does calling it change anything (save, delete, send)?</td><td>Yes &rarr; Tool</td></tr>
+        <tr><td>Is it data the model should read, with no side effect?</td><td>Yes &rarr; Resource (static if fixed URI, templated if parameterized)</td></tr>
+        <tr><td>Is it a template of text a human explicitly picks to send to the model?</td><td>Yes &rarr; Prompt</td></tr>
+      </tbody>
+    </table>
+    <p>
+      Chapter 4's exercises already asked you to reason about
+      tool-vs-resource for a <code>note_count()</code> function. The same
+      discipline applies here: don't reach for "tool" by default just
+      because that's the first primitive you learned.
+    </p>
+  </section>
+
+  <section id="production" class="subtopic">
+    <h2>Production Scenario: The Resource Nobody Could Find</h2>
+    <p>
+      An internal docs team built an MCP server exposing company policy
+      documents as templated resources
+      (<code>policy://{department}/{doc-id}</code>). Adoption was
+      unexpectedly low. The root cause, once someone actually inspected
+      the host's integration code: the host was calling
+      <code>list_resources()</code> only — a reasonable-looking
+      integration that simply never called
+      <code>list_resource_templates()</code>, because the engineer who
+      wrote it tested against a demo server that only had static
+      resources. The templated policy resources were fully functional
+      and completely invisible to users. The fix was one line — call
+      both list methods and merge the results — but it took a support
+      ticket and a debugging session to find, because "resources exist
+      but don't show up" doesn't look like a server bug from the outside.
+    </p>
+  </section>
+
+  <section id="mistakes" class="subtopic">
+    <h2>Common Mistakes</h2>
+    <ul>
+      <li>Assuming <code>list_resources()</code> returns everything —
+      always check <code>list_resource_templates()</code> too when
+      debugging "missing" resources.</li>
+      <li>Building a tool for something that's really read-only data with
+      no side effect — check the "when to use what" table before
+      defaulting to a tool.</li>
+      <li>Treating a prompt's return value as if it executes something —
+      it's just text that becomes a message; nothing runs on the server
+      beyond generating that text.</li>
+      <li>Forgetting that a prompt, unlike a tool, is meant to be
+      explicitly chosen by a person, not autonomously invoked by a model
+      mid-conversation — designing a prompt's UX around "the model will
+      just call it" misunderstands the primitive.</li>
+    </ul>
+  </section>
+
+  <section id="thought-process" class="subtopic">
+    <h2>Builder Thought Process</h2>
+    <div class="thinking-box">
+      <p><strong>Problem:</strong> the docs team's policy server had low
+      adoption despite working correctly in every manual test.</p>
+      <p><strong>Assumptions:</strong> the host's resource-discovery code
+      was complete, since it had been working for other (static-resource)
+      servers.</p>
+      <p><strong>Approach:</strong> reproduced the user's experience by
+      connecting a fresh client and calling exactly what the host
+      called, rather than testing the server in isolation with a tool
+      like the MCP Inspector, which surfaces both resource types by
+      default.</p>
+      <p><strong>Validation:</strong> confirmed <code>list_resources()</code>
+      alone returned an empty list against the real policy server, while
+      <code>list_resource_templates()</code> returned the expected
+      entries — reproducing the user's exact experience.</p>
+      <p><strong>Decision:</strong> fixed the host's discovery code to
+      call and merge both lists, and added an integration test that
+      asserts on a templated resource specifically, so this class of bug
+      can't silently reappear.</p>
+    </div>
+  </section>
+
+  <section id="recap" class="subtopic">
+    <div class="points-to-remember">
+      <h2>Points To Remember</h2>
+      <ul>
+        <li>Resources can be static (fixed URI) or templated (parameterized
+        URI) — and they're discovered through two separate client calls,
+        <code>list_resources()</code> and <code>list_resource_templates()</code>.</li>
+        <li>A prompt is a reusable text template a human explicitly
+        picks; calling it returns a structured message, it doesn't
+        execute anything.</li>
+        <li>Choose the primitive by asking: does it change something
+        (tool), is it read-only data (resource), or is it a template a
+        person selects (prompt)?</li>
+        <li>"The client can't see my resource" is very often a discovery
+        bug (missing the templates call), not a server bug.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="cheat-sheet" class="subtopic">
+    <div class="what-is">
+      <span class="label">Cheat sheet</span>
+      <pre><code>@mcp.resource("config://app")       # static
+@mcp.resource("note://{title}")     # templated
+
+@mcp.prompt()
+def name(arg: str) -> str: ...      # returns text, not executed
+
+client.list_resources()             # static only
+client.list_resource_templates()    # templated only -- check BOTH
+client.get_prompt(name, args)       # -> PromptMessage list, no execution</code></pre>
+    </div>
+  </section>
+
+  <div class="what-is">
+    <span class="label">Interview questions (4 levels)</span>
+    See <a href="interview-questions.html">Chapter 5 interview questions</a>.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../../index.html">&larr; All Chapters</a>
+    <a href="quiz.html">Take the Quiz &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+    <span><a href="https://github.com/technaom/mcp-for-everyone">github.com/technaom/mcp-for-everyone</a></span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

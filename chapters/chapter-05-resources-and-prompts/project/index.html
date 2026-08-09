@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resources & Prompts Project — MCP for Everyone</title>
+<meta name="description" content="Project for Resources & Prompts: extend the bookmarks server with a resource and a prompt.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-05">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../interview-questions.html">&larr; Back to interview questions</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 5 Project</span>
+    <span class="reading-time">~30 min · Level 1, Guided</span>
+  </div>
+  <h1>Extend the Bookmarks Server</h1>
+  <p>Add a static resource and a prompt to Chapter 4's bookmarks server —
+  practice choosing the right primitive on a system you already know.</p>
+
+  <div class="hook">
+    <p>
+      This reuses Chapter 4's bookmarks server rather than duplicating
+      it, loaded by explicit file path (see the solution's
+      <code>_load_chapter_4_module</code> helper) rather than a fragile
+      <code>sys.path</code> trick — both files are named
+      <code>solution.py</code>, and a naive import approach breaks
+      depending on how the script is invoked. Worth reading that helper's
+      docstring even if you don't touch it.
+    </p>
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <h2>Build it</h2>
+  <p>
+    Add <code>bookmarks://count</code> as a static resource returning a
+    bookmark count, and <code>recommend_reading(topic)</code> as a
+    prompt asking the model to recommend a relevant saved bookmark. The
+    prompt should return instruction text only — it can't see the actual
+    bookmark data itself; that's the host's job to supply alongside it.
+  </p>
+
+  <div class="what-is">
+    <span class="label">Verification</span>
+    <pre><code>python -c "
+import asyncio
+from mcp import Client
+from solution import mcp
+
+async def main():
+    async with Client(mcp) as client:
+        await client.call_tool('add_bookmark', {
+            'url': 'https://modelcontextprotocol.io',
+            'title': 'MCP Docs', 'tags': ['mcp'],
+        })
+        r = await client.read_resource('bookmarks://count')
+        print(r.contents[0].text)
+        p = await client.get_prompt('recommend_reading', {'topic': 'protocols'})
+        print(p.messages[0].content.text)
+
+asyncio.run(main())
+"</code></pre>
+    Expect <code>1 bookmarks</code>, then the recommendation prompt text.
+  </div>
+
+  <div class="what-is">
+    <span class="label">Extension challenge</span>
+    Add a second static resource, <code>bookmarks://tags</code>, that
+    returns every unique tag across all saved bookmarks. Then decide: at
+    what bookmark count would you reconsider this as a templated resource
+    or a tool instead, per this chapter's scale discussion?
+  </div>
+
+  <div class="points-to-remember">
+    <h2>Why this project matters</h2>
+    <p>
+      Real MCP servers grow by accretion — a tool here, a resource
+      there, added by whoever needs the next capability. Practicing on a
+      system you already understand (rather than a fresh one) mirrors how
+      this actually happens: you're extending, not starting over.
+    </p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../interview-questions.html">&larr; Interview Questions</a>
+    <a href="../../../index.html">All Chapters &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

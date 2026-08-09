@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resources & Prompts Practice Bank — MCP for Everyone</title>
+<meta name="description" content="Practice bank for Resources & Prompts.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-05">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../exercises/index.html">&larr; Back to exercises</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 5 Practice Bank</span>
+    <span class="reading-time">~20 min</span>
+  </div>
+  <h1>Practice Bank: Resources & Prompts</h1>
+  <p>Scenario judgment for choosing and operating the right primitive.</p>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Support</span>
+    <h3>The "missing" resource ticket</h3>
+    <p>A user reports a resource "isn't there" even though you can read
+    it directly by URI. Before reading the lesson's production scenario
+    again, what's the first question you'd ask the person who wrote the
+    host's integration code?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Product</span>
+    <h3>The prompt marketplace</h3>
+    <p>A product wants to let third-party teams publish prompts to a
+    shared MCP server that any internal host can browse and use. What's
+    different about reviewing a submitted prompt versus reviewing a
+    submitted tool?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Cost</span>
+    <h3>The resource that got expensive</h3>
+    <p>A templated resource fetches from a paid third-party API on every
+    read, with no caching. Given what Chapter 3 said about
+    <code>cacheScope</code>/<code>ttlMs</code> metadata on list results,
+    what would you investigate to reduce cost without changing the
+    resource's actual behavior?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Compliance</span>
+    <h3>The prompt with a hidden instruction</h3>
+    <p>A prompt template returns text that includes an instruction like
+    "ignore prior formatting constraints." Should this be treated
+    differently from ordinary prompt content during a security review?
+    Why?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Operations</span>
+    <h3>The static resource that stopped being static</h3>
+    <p>A resource that used to return truly fixed app config now needs to
+    vary by which team is asking. Does it stay a static resource, become
+    templated, or become something else entirely? Walk through your
+    reasoning.</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Eval</span>
+    <h3>The untested primitive</h3>
+    <p>A team's test suite has good coverage for tools but zero tests for
+    resources or prompts. What's one concrete test you'd add for each,
+    given what this chapter demonstrated about resource discovery and
+    prompt message structure?</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../exercises/index.html">&larr; Exercises</a>
+    <a href="../interview-questions.html">Interview Questions &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

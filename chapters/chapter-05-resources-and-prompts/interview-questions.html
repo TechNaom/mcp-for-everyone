@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resources & Prompts Interview Questions — MCP for Everyone</title>
+<meta name="description" content="Interview questions for Resources & Prompts.">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-05">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="practice/index.html">&larr; Back to practice bank</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 5 Interview Questions</span>
+    <span class="reading-time">~15 min</span>
+  </div>
+  <h1>Interview Questions: Resources & Prompts</h1>
+  <p>Grouped by level. Each includes a strong answer, a red flag, and a follow-up.</p>
+
+  <div class="lesson-card">
+    <h2>1. (Beginner) What's the difference between a static and a templated resource?</h2>
+    <p><strong>Strong answer:</strong> A static resource has a fixed URI with no parameters (like <code>config://app</code>) — there's exactly one of it. A templated resource has a parameterized URI (like <code>note://{title}</code>) representing a family of addressable items. Both are read-only, no-side-effect data, unlike tools.</p>
+    <p><strong>Red flag:</strong> Can't give an example of each, or thinks templated resources are a kind of tool.</p>
+    <p><strong>Follow-up:</strong> "How does a client discover which templated resources a server offers?"</p>
+    <p><strong>What this proves:</strong> Has the vocabulary to reason about resource design, not just tools.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>2. (Beginner) What does calling a prompt actually do?</h2>
+    <p><strong>Strong answer:</strong> Nothing executes — the prompt function returns text (or a structured set of messages) that the host sends to the model. It's fundamentally different from a tool call, which runs code and can have side effects.</p>
+    <p><strong>Red flag:</strong> Describes a prompt as "a kind of tool that runs a prompt template," conflating execution with text generation.</p>
+    <p><strong>Follow-up:</strong> "Who typically triggers a prompt — the model, or a person?"</p>
+    <p><strong>What this proves:</strong> Distinguishes prompts from tools at the conceptual level, not just by decorator name.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>3. (Intermediate) A host reports "the server has no resources" but you know the server exposes a templated note resource. What's your first hypothesis?</h2>
+    <p><strong>Strong answer:</strong> Check whether the host's discovery code calls both <code>list_resources()</code> and <code>list_resource_templates()</code> — they're separate calls, and it's common for integration code to only call the first, especially if it was originally written and tested against a server with only static resources. This is a documented real failure mode (see the chapter's production scenario), not a rare edge case.</p>
+    <p><strong>Red flag:</strong> Jumps straight to "the server must be broken" without considering the discovery-side gap.</p>
+    <p><strong>Follow-up:</strong> "How would you write an integration test that would have caught this before it shipped?"</p>
+    <p><strong>What this proves:</strong> Debugs from a documented, specific failure pattern rather than guessing broadly.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>4. (Intermediate) When would you build something as a resource instead of a tool, even though a tool could technically do the same job?</h2>
+    <p><strong>Strong answer:</strong> When the operation is read-only with no side effect and represents data the model should be able to load directly into context — a resource communicates "this is data" more clearly than a tool does, and lets a host pre-load it without an explicit model decision to call something. The reverse mistake (making everything a tool) works but obscures intent and can bloat the tool catalog unnecessarily, hurting model tool-selection accuracy the way Chapter 4 discussed.</p>
+    <p><strong>Red flag:</strong> Says "it doesn't matter, they're interchangeable" — technically callable doesn't mean semantically equivalent, and the choice affects host behavior and model reasoning.</p>
+    <p><strong>Follow-up:</strong> "Could a host decide to always load a particular resource into every conversation automatically? Could it do that with a tool?"</p>
+    <p><strong>What this proves:</strong> Understands the primitives are a design vocabulary, not just three interchangeable ways to expose a function.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>5. (Senior) Design a prompt library for a support team's MCP server. What do you need to think about beyond just writing prompt functions?</h2>
+    <p><strong>Strong answer:</strong> Prompts are explicitly human-selected, so UX matters: clear, discoverable names and descriptions (the docstring is user-facing here, arguably more than for tools), sensible default/example arguments, and versioning — if you change a prompt's wording, existing users who've built workflows around its exact output may be affected. Also worth considering: should some prompts be static text with no arguments (simplest), versus parameterized ones that need argument validation same as tools.</p>
+    <p><strong>Red flag:</strong> Treats prompt design as identical to tool design with no acknowledgment of the human-facing, explicitly-selected nature of prompts.</p>
+    <p><strong>Follow-up:</strong> "How would you deprecate a prompt that's actively used by several teams' workflows?"</p>
+    <p><strong>What this proves:</strong> Recognizes prompts have a different design surface (human UX) than tools (model UX).</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>6. (Senior) Your resource-serving code needs to decide between exposing 500 documents as 500 static resources vs. one templated resource. Walk through the trade-off.</h2>
+    <p><strong>Strong answer:</strong> 500 static resources means <code>list_resources()</code> returns a 500-item list on every discovery call — expensive, and unwieldy for a host to present. One templated resource (<code>doc://{id}</code>) means discovery is cheap (one template entry) but the client needs to already know or discover valid IDs some other way (perhaps via a separate search tool). The templated approach almost always wins at this scale; static resources make sense only for a small, fixed set of genuinely distinct things (like app config).</p>
+    <p><strong>Red flag:</strong> Doesn't recognize that a 500-entry static resource list is a real, measurable scaling problem, not just a style preference.</p>
+    <p><strong>Follow-up:</strong> "If IDs aren't human-guessable, how would a model or host find the right one to request?"</p>
+    <p><strong>What this proves:</strong> Applies the static-vs-templated distinction to a real scale decision, not just a definitional one.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>7. (Architect) How would you govern prompt content across an org with dozens of MCP servers, each exposing its own prompts?</h2>
+    <p><strong>Strong answer:</strong> Because a prompt's return value becomes text sent directly to a model, ungoverned prompt content is effectively ungoverned system-prompt injection at scale — a poorly or maliciously written prompt could instruct the model in ways the host and its safety layers didn't anticipate. Treat prompts the way you'd treat any user-facing copy with model-behavior implications: a review process before a new prompt ships to production, and ideally a registry so security/compliance can audit what instructions are being sent to models across the org, not just what tools exist.</p>
+    <p><strong>Red flag:</strong> Treats prompts as low-risk because "they're just text," missing that text sent to a model is exactly the attack surface prompt injection concerns itself with (foreshadowing Chapter 10).</p>
+    <p><strong>Follow-up:</strong> "Should a prompt from a third-party MCP server be trusted the same way as one from an internal server?"</p>
+    <p><strong>What this proves:</strong> Connects prompt governance to the security thinking the course builds toward in Module 5, rather than treating this chapter's content as isolated from security concerns.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>8. (Architect) A product wants "smart resources" that change their returned content based on who's asking. How does this interact with MCP's resource model?</h2>
+    <p><strong>Strong answer:</strong> Nothing in the resource primitive itself carries caller identity — per Chapter 3, that information (if any) lives in <code>_meta</code> or is established by the host/transport layer (auth headers on Streamable HTTP, for instance), not the resource URI. A resource function can absolutely branch on caller identity if the server has access to it through its own auth/session mechanism, but that's server-side application logic layered on top of MCP, not something the protocol provides. The architectural risk: if this isn't done carefully, two different callers requesting the identical URI could get different content with no signal to the client that this happened, which breaks caching assumptions (recall Chapter 3's `cacheScope`/`ttlMs` metadata) and complicates debugging ("why did this URI return something different this time").</p>
+    <p><strong>Red flag:</strong> Assumes the URI itself can encode identity safely, or doesn't recognize the caching/debugging implications of identity-dependent resource content.</p>
+    <p><strong>Follow-up:</strong> "How would you signal to the client that a resource's content is caller-dependent and shouldn't be cached across users?"</p>
+    <p><strong>What this proves:</strong> Connects resource design to protocol-level concerns (caching, identity) covered elsewhere in the course, showing systems-level rather than isolated feature thinking.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="practice/index.html">&larr; Practice Bank</a>
+    <a href="project/index.html">Build the Project &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

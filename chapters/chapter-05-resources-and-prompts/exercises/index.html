@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resources & Prompts Exercises — MCP for Everyone</title>
+<meta name="description" content="Hands-on exercises for Resources & Prompts.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-05">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../quiz.html">&larr; Back to the quiz</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 5 Exercises</span>
+    <span class="reading-time">~25 min</span>
+  </div>
+  <h1>Exercises: Resources & Prompts</h1>
+  <p>Extend the notes server with a static resource and a prompt, then
+  verify the discovery gotcha from the lesson yourself.</p>
+
+  <div class="what-is">
+    <span class="label">How to run these</span>
+    <pre><code>pip install "mcp[cli]"
+cd chapters/chapter-05-resources-and-prompts/exercises
+python solution.py --check-discovery   # or fill starter.py first</code></pre>
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">1</span> Add a static resource</h3>
+    <p>Add <code>stats://notes</code> returning a note-count and
+    character-count summary, per the starter's TODO 1.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">2</span> Add a prompt</h3>
+    <p>Add <code>summarize_note(title)</code> per TODO 2. Remember: it
+    returns instruction text, it doesn't fetch or process the note's
+    actual body.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">3</span> (Production-gear) Verify the discovery split</h3>
+    <p>Run TODO 3's discovery check. Confirm <code>stats://notes</code>
+    appears only under <code>list_resources()</code> and
+    <code>note://{title}</code> appears only under
+    <code>list_resource_templates()</code> — exactly the split the lesson
+    warned about.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">4</span> (Production-gear) Write the merge function</h3>
+    <p>Write a function <code>list_all_readable_uris(client)</code> that
+    calls both discovery methods and returns one combined list. This is
+    the one-line fix the lesson's production scenario needed.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">5</span> Tool, resource, or prompt?</h3>
+    <p>For each of the following, name the right primitive and justify
+    it in one sentence: (a) "delete a note," (b) "the server's current
+    software version," (c) "a template asking the model to translate
+    text to French."</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">6</span> (Production-gear) Scale the resource design</h3>
+    <p>Your notes server needs to support 10,000 notes. Would you keep
+    <code>note://{title}</code> as-is, or redesign it? Justify your
+    answer using the scale trade-off from this chapter's interview
+    questions.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../quiz.html">&larr; Back to Quiz</a>
+    <a href="../practice/index.html">Practice Bank &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

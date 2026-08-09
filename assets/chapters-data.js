@@ -8,7 +8,7 @@
   module's written exam actually exists in
   assessments/written-exams/ -- do not pre-fill a path for an exam that
   hasn't been written yet.
-  Chapters 1-4 have content today — see PROJECT_STATE.md.
+  Chapters 1-5 have content today — see PROJECT_STATE.md.
 */
 
 window.MFE_MODULES = [
@@ -98,7 +98,16 @@ window.MFE_MODULES = [
         id: "chapter-05",
         num: 5,
         title: "Resources & Prompts",
-        description: "The other two MCP primitives and when to reach for each."
+        path: "chapters/chapter-05-resources-and-prompts/lesson.html",
+        description: "The other two MCP primitives and when to reach for each.",
+        subtopics: [
+          { id: "hook", title: "The tool you shouldn't have built" },
+          { id: "static-vs-templated", title: "Static vs. templated resources" },
+          { id: "the-gotcha", title: "The gotcha: two separate lists" },
+          { id: "prompts", title: "Prompts: the skipped primitive" },
+          { id: "when-to-use-what", title: "Choosing the right primitive" },
+          { id: "recap", title: "Points to remember" }
+        ]
       },
       {
         id: "chapter-06",
