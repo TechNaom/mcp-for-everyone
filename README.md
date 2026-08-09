@@ -69,8 +69,12 @@ mcp-for-everyone/
 
 ## How to start
 
-This repo is under active construction. See `PROJECT_STATE.md` for what's
-built and what's next.
+All 13 chapters are live. Start at
+[Chapter 1](https://technaom.github.io/mcp-for-everyone/chapters/chapter-01-the-integration-problem-mcp-solves/lesson.html)
+or browse the [full roadmap](https://technaom.github.io/mcp-for-everyone/docs/curriculum/index.html).
+Every code example runs against the real MCP Python SDK
+(`pip install "mcp[cli]"`, Python 3.10+) — clone the repo and run any
+chapter's `exercises/solution.py` or `project/solution.py` directly.
 
 ## Projects
 
@@ -83,6 +87,12 @@ Enterprise MCP platform: multiple servers behind a gateway, per-team
 permission model, audit logging, tool-call accuracy evaluation, full ADR
 set, deployment plan. Details in `docs/production-and-capstone-projects.md`
 (written alongside Module 7).
+
+## Contributing
+
+Solo-maintained; not open to external PRs. See `CONTRIBUTING.md` if
+you're forking this for your own use. `CHANGELOG.md` has the full
+build history.
 
 ## License
 
