@@ -45,21 +45,33 @@ this file won't be as fresh as that one. What exists:
 - `templates/` and `assets/{style.css,sidebar.js,progress.js,quiz-engine.js,chapters-data.js}`
   copied from `rag-for-everyone` and rebranded (structure only), plus the
   full 13-chapter roster wired into `chapters-data.js` for sidebar nav
-- **Chapter 4 ("Your First MCP Server") is fully built and validated** —
-  the reference chapter: `chapters/chapter-04-your-first-mcp-server/`
-  contains `lesson.html`, `quiz.html`, `interview-questions.html`,
-  `exercises/{index.html,starter.py,solution.py}`,
-  `practice/index.html`, `project/{index.html,starter.py,solution.py}`.
-  Every Python example in it was installed and run against the real
-  `mcp` SDK v2.0.0 before being written into the lesson — do not add new
-  code examples to this course from memory; install `mcp[cli]` in a
-  scratch venv and run them first, the same way this chapter's two real
-  bugs (silent type-widening, URI-template `://` collision) were caught.
-  Audit: `quality-audits/chapter-04-audit.md`.
+- **Chapters 1–4 are fully built and validated** — same page set each:
+  `lesson.html`, `quiz.html`, `interview-questions.html`,
+  `exercises/{index.html,starter.py,solution.py or reasoning tasks}`,
+  `practice/index.html`, `project/{index.html,...}`. Every Python example
+  across all four chapters was installed and run against the real `mcp`
+  SDK v2.0.0 before being written into a lesson — do not add new code
+  examples to this course from memory; install `mcp[cli]` in a scratch
+  venv and run them first. This discipline has caught real bugs three
+  separate times so far: Chapter 4's silent type-widening and
+  URI-template `://` collision, and Chapter 3's wrong assumption that
+  calling a nonexistent tool raises a Python exception (it doesn't — see
+  `chapters/chapter-03-the-mcp-message-lifecycle/project/solution.py`).
+  Chapters 1–2 are conceptual (no code, per the curriculum map) with
+  written-memo/diagram projects instead. Chapter 3's exercises/project
+  import Chapter 4's solution server via `sys.path` rather than
+  duplicating it — if you ever change Chapter 4's
+  `exercises/solution.py` function signatures, re-run Chapter 3's code.
+  Audits: `quality-audits/chapter-0{1,2,3,4}-audit.md`.
+- **Root website is live**: `index.html`, `docs/curriculum/index.html`
+  (styled roadmap), deployed via `.github/workflows/pages.yml` to
+  https://technaom.github.io/mcp-for-everyone/. `assets/chapters-data.js`
+  is the single source of truth for what's "live" — a chapter needs a
+  `path` field to render as a link; omitting `path` renders it as a
+  non-linked "planned" card in both the sidebar and home page. Don't add
+  a placeholder `path` for an unbuilt chapter, it will 404.
 
-Chapters 1–3 and 5–13 don't exist yet. No website
-(`index.html` at root doesn't exist yet — that's Step 9, deliberately
-deferred until content modules are built).
+Chapters 5–13 don't exist yet.
 
 ## Naming conventions
 
@@ -83,24 +95,30 @@ deferred until content modules are built).
   If the spec changes again, re-verify against modelcontextprotocol.io
   primary sources before touching chapter content — do not assume prior
   knowledge is current, MCP moves fast.
-- Don't mass-generate all 13 chapters before Chapter 4 (the reference
-  chapter) has been built and validated against the quality gates. That's
-  the explicit build order in `PROJECT_STATE.md`.
+- Don't mass-generate remaining chapters ahead of validation — build one
+  module at a time, run a `quality-audits/chapter-0N-audit.md` for each,
+  same as Chapters 1–4. That's the explicit build order in
+  `PROJECT_STATE.md`.
+- Don't add a `path` to a chapter in `assets/chapters-data.js` until that
+  chapter's `lesson.html` actually exists — sidebar.js and home.js treat
+  `path` presence as "live," so a premature path 404s.
 - Don't copy lesson content, examples, or project stories from other
   TechNaom repos — structure/templates only.
 
 ## Current task
 
-Chapter 4 is done and validated (see above). Next: build Chapters 1–3
-(Modules 1–2) using Chapter 4's page set as the template, then validate
-each with its own `quality-audits/chapter-0N-audit.md` before moving on
-— see "Next Recommended Task" in `PROJECT_STATE.md`.
+Chapters 1–4 are done and validated. Next: Module 3 (Chapters 5–6,
+"Resources & Prompts" and "Transports: stdio vs. Streamable HTTP") — see
+"Next Recommended Task" in `PROJECT_STATE.md` for specifics, including
+that Chapter 6 needs the Streamable HTTP transport actually exercised
+with real code, not just described.
 
 ## Next task after that
 
-Continue Module 3 (Chapters 5–6), then Module 4 (7–8), following the
-curriculum map's build order — one module at a time, validated after
-each, per the master workflow. Don't mass-generate ahead of validation.
+Continue Module 4 (Chapters 7–8), then Module 5 (9–10, security — this
+course's core differentiator), following the curriculum map's build
+order — one module at a time, validated after each, per the master
+workflow. Don't mass-generate ahead of validation.
 
 ## Important architectural decisions (see PROJECT_STATE.md for full detail)
 

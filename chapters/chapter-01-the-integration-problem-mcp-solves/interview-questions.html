@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Integration Problem MCP Solves Interview Questions — MCP for Everyone</title>
+<meta name="description" content="Interview questions for The Integration Problem MCP Solves.">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-01">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="practice/index.html">&larr; Back to practice bank</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 1 Interview Questions</span>
+    <span class="reading-time">~12 min</span>
+  </div>
+  <h1>Interview Questions: The Integration Problem MCP Solves</h1>
+  <p>Grouped by level. Each includes a strong answer, a red flag, and a follow-up.</p>
+
+  <div class="lesson-card">
+    <h2>1. (Beginner) In plain language, what problem does MCP solve?</h2>
+    <p><strong>Strong answer:</strong> It gives AI applications a standard way to connect to tools and data sources, so a tool only needs to be built once and any MCP-speaking application can use it — instead of every application/model combination needing its own bespoke integration.</p>
+    <p><strong>Red flag:</strong> Describes MCP purely as "a way for AI to call APIs" with no mention of the standardization/reuse angle, or confuses it with function calling in general.</p>
+    <p><strong>Follow-up:</strong> "Could you build a tool-using AI system without MCP? What would you lose?"</p>
+    <p><strong>What this proves:</strong> Understands MCP is about the shared contract, not that tool use itself is new.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>2. (Beginner) Why doesn't a single company with one AI product need MCP?</h2>
+    <p><strong>Strong answer:</strong> If there's exactly one tool consumer and no plan for more, a direct function call is simpler and has less overhead — MCP's value comes from decoupling tool implementation from tool consumption, which only pays off once there's more than one consumer, or a real expectation of more later.</p>
+    <p><strong>Red flag:</strong> Says "you always need MCP for tool use," treating it as mandatory rather than a judgment call based on reuse.</p>
+    <p><strong>Follow-up:</strong> "At what point would you recommend that single-product company adopt MCP anyway?"</p>
+    <p><strong>What this proves:</strong> Doesn't over-apply the protocol reflexively; can reason about when the standardization cost is worth paying.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>3. (Intermediate) Does adopting MCP make a tool secure?</h2>
+    <p><strong>Strong answer:</strong> No. MCP standardizes how a tool is reached, not what judgment went into designing or permissioning it. An over-permissioned or poorly validated tool is exactly as risky exposed over MCP as it was as a bespoke function — arguably more discoverable, since more consumers can now reach it. Security is a separate, deliberate layer (Module 5 of this course covers it), not a side effect of using the standard.</p>
+    <p><strong>Red flag:</strong> Implies "MCP" and "secure" are related properties, or can't explain why standardizing the interface doesn't standardize the judgment behind it.</p>
+    <p><strong>Follow-up:</strong> "Give an example of a tool that's just as dangerous over MCP as it would be as a bespoke function."</p>
+    <p><strong>What this proves:</strong> Doesn't conflate "using the modern standard" with "safe by default" — a common and consequential misconception.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>4. (Intermediate) A teammate says "let's put everything behind MCP servers, it's the modern way." How do you respond?</h2>
+    <p><strong>Strong answer:</strong> Push back on "everything" and ask for the actual reuse story: how many consumers does this tool have today, and how many are realistically expected? If it's one consumer with no near-term second one, the standardization overhead (schema design, versioning, a separate deployable) isn't earning its cost yet. The lesson's support-platform example didn't adopt MCP on principle — it adopted it after two real rewrites and a third on the horizon.</p>
+    <p><strong>Red flag:</strong> Either agrees uncritically ("yes, always use MCP") or dismisses it entirely ("we'll never need it") without asking about actual reuse.</p>
+    <p><strong>Follow-up:</strong> "How would you decide, concretely, when a single-consumer tool has crossed the line into 'worth standardizing'?"</p>
+    <p><strong>What this proves:</strong> Resists hype-driven technology adoption; reasons from cost and reuse rather than trend.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>5. (Senior) How would you estimate the integration cost saved by adopting MCP for an org with 15 internal tools and 4 AI surfaces?</h2>
+    <p><strong>Strong answer:</strong> Frame it as up to N × M = 60 potential bespoke integrations without a shared protocol, versus roughly N + M = 19 integration points with one (each tool built once against the protocol, each surface built once as a client) — while being honest that this is an upper bound, not a guarantee: some tools may only ever have one consumer, and the M surfaces still each need real client-side integration work, just not N times over. A defensible answer gives the multiplicative-vs-additive framing but doesn't overstate it as an exact cost model.</p>
+    <p><strong>Red flag:</strong> States the N×M number as if it's a precise, guaranteed savings figure rather than an illustrative upper bound.</p>
+    <p><strong>Follow-up:</strong> "What costs does MCP add that this simple count doesn't capture?" (schema design, versioning, running/operating servers, security review)</p>
+    <p><strong>What this proves:</strong> Can reason quantitatively about integration cost while staying honest about the limits of a simplified model — an architect-adjacent skill even at senior IC level.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>6. (Architect) You're advising a company that already has 12 different bespoke tool integrations across 3 products, none of them MCP. What's your migration approach?</h2>
+    <p><strong>Strong answer:</strong> Don't propose a big-bang rewrite of all 12. Rank tools by actual reuse (how many products/consumers touch each one today, or will soon) and migrate highest-reuse tools to MCP servers first — that's where the N×M savings are realized fastest and where the current bespoke drift (different copies going out of sync) is most costly. Leave genuinely single-consumer tools alone until a second consumer appears. Pair the migration with the security review each newly-shared tool needs, since exposing a tool to more consumers changes its risk profile even if the code doesn't change.</p>
+    <p><strong>Red flag:</strong> Proposes migrating everything at once "for consistency," ignoring that some tools may never need the standardization cost.</p>
+    <p><strong>Follow-up:</strong> "How do you handle a tool where two of the three products have already diverged copies with different bug fixes?"</p>
+    <p><strong>What this proves:</strong> Architect-level judgment: sequences a migration by actual value delivered, not by completeness for its own sake, and anticipates the security implications of increasing a tool's reach.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>7. (Senior) Someone claims MCP eliminates integration work. How do you correct that in one sentence, and what's a truer framing?</h2>
+    <p><strong>Strong answer:</strong> It doesn't eliminate integration work, it changes its shape — from N×M bespoke shapes to a smaller, shared amount of work (N+M) plus the ongoing cost of operating the standardized servers themselves. A senior engineer should be able to name that residual cost (server hosting, schema versioning, security review) rather than presenting the N+M number as if it were free.</p>
+    <p><strong>Red flag:</strong> Agrees that MCP "removes" integration work, or can't name any residual cost after standardizing.</p>
+    <p><strong>Follow-up:</strong> "What ongoing cost does a newly-MCP-ified tool have that a private function never did?"</p>
+    <p><strong>What this proves:</strong> Resists oversimplified pitches, even ones that sound favorable to the technology being discussed.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>8. (Architect) How would you explain the N×M vs N+M framing to a non-technical stakeholder deciding whether to fund an MCP migration?</h2>
+    <p><strong>Strong answer:</strong> Translate it into their terms: "today, every time we add a new AI surface, we're re-paying the cost of every tool we already built, N times over. Standardizing means each new surface only costs us once, not N times" — with a concrete number from their own org's tool/surface count, the way the lesson's memo project asks for. Pair it with the honest caveat that standardization has its own upfront and ongoing cost, so the pitch is "this gets cheaper as we scale," not "this is free."</p>
+    <p><strong>Red flag:</strong> Uses the N×M/N+M notation itself with a non-technical audience instead of translating it, or omits the caveat about ongoing cost entirely to make the pitch sound stronger than it is.</p>
+    <p><strong>Follow-up:</strong> "How would you know, six months later, whether the migration actually delivered the savings you pitched?"</p>
+    <p><strong>What this proves:</strong> Can translate a technical trade-off into a business case without overselling it — a core architect communication skill.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="practice/index.html">&larr; Practice Bank</a>
+    <a href="project/index.html">Build the Project &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

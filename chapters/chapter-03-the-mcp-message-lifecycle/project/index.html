@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The MCP Message Lifecycle Project — MCP for Everyone</title>
+<meta name="description" content="Project for The MCP Message Lifecycle: build a message-lifecycle logger.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-03">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../interview-questions.html">&larr; Back to interview questions</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 3 Project</span>
+    <span class="reading-time">~30 min · Level 1, Guided</span>
+  </div>
+  <h1>Build a Message-Lifecycle Logger</h1>
+  <p>The kind of debug logging you'd actually reach for when diagnosing
+  the "silent version mismatch" production scenario from the lesson.</p>
+
+  <div class="hook">
+    <p>
+      Reuses Chapter 4's notes server again — this time you're wrapping
+      every tool call with a trace that prints what went out and what
+      came back, the same discipline the lesson's logistics-company
+      scenario needed to find their silent failure.
+    </p>
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <h2>Build it</h2>
+  <p>
+    Implement <code>traced_call</code> in <code>starter.py</code>: print
+    the outgoing call shape, time the call, then print
+    <code>result_type</code>, <code>is_error</code>, and <code>meta</code>
+    from the response. Then do TODO 4: call a tool that doesn't exist and
+    observe — don't assume — what actually comes back. The reference
+    solution's first draft assumed this would raise a Python exception;
+    running it proved that wrong (it's a normal <code>is_error=True</code>
+    result, same as any other tool failure), which is exactly the kind
+    of assumption this exercise is designed to catch.
+  </p>
+
+  <div class="what-is">
+    <span class="label">Verification</span>
+    Expect output shaped like:
+    <pre><code>>> tools/call  name='save_note'  arguments={'title': 'trace-demo', 'body': 'hello'}
+<< result_type='complete'  is_error=False  meta={...}  (48.29ms)</code></pre>
+    and for the nonexistent-tool call, <code>is_error=True</code> with
+    the same <code>result_type='complete'</code> shape — not a crash.
+  </div>
+
+  <div class="what-is">
+    <span class="label">Extension challenge</span>
+    Add a fourth field to your trace: a simple heuristic that flags
+    "possible legacy-era response" if <code>meta</code> is empty or
+    missing <code>serverInfo</code>, per the compatibility discussion in
+    the lesson. You won't be able to test this against a real legacy
+    server, but write the check as if you could.
+  </div>
+
+  <div class="points-to-remember">
+    <h2>Why this project matters</h2>
+    <p>
+      This is the exact tool a senior engineer reaches for the moment
+      "it works in my manual test" stops being good enough — and it
+      reuses code you've now touched three chapters in a row, which is
+      deliberate: real systems get inspected from multiple angles, not
+      built once and never revisited.
+    </p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../interview-questions.html">&larr; Interview Questions</a>
+    <a href="../../../index.html">All Chapters &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

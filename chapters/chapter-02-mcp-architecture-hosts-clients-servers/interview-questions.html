@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Architecture Interview Questions — MCP for Everyone</title>
+<meta name="description" content="Interview questions for MCP Architecture: Hosts, Clients, Servers.">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-02">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="practice/index.html">&larr; Back to practice bank</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 2 Interview Questions</span>
+    <span class="reading-time">~12 min</span>
+  </div>
+  <h1>Interview Questions: MCP Architecture</h1>
+  <p>Grouped by level. Each includes a strong answer, a red flag, and a follow-up.</p>
+
+  <div class="lesson-card">
+    <h2>1. (Beginner) What's the difference between an MCP host and an MCP client?</h2>
+    <p><strong>Strong answer:</strong> The host is the user-facing application (a chat app, an IDE). The client is the protocol connection inside the host that talks to one specific server — a host with three server connections runs three clients internally. A user interacts with the host; they never directly interact with a client.</p>
+    <p><strong>Red flag:</strong> Uses "host" and "client" interchangeably, or says the client is a separate application a user opens.</p>
+    <p><strong>Follow-up:</strong> "If a host disconnects from a server and reconnects, is that the same client or a new one?"</p>
+    <p><strong>What this proves:</strong> Has internalized the roles precisely enough to reason about them, not just recite definitions.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>2. (Beginner) Where does the LLM fit into the host/client/server model?</h2>
+    <p><strong>Strong answer:</strong> It doesn't have its own role — it's not a host, client, or server. The model is what the host uses internally to decide which tools to call and how to interpret results. MCP is a protocol between the host application and servers; the model is an implementation detail of the host's decision-making.</p>
+    <p><strong>Red flag:</strong> Calls the model "the client" or "the server," or can't explain why it isn't a party in the protocol.</p>
+    <p><strong>Follow-up:</strong> "Could you test an MCP server without any LLM involved at all? How?"</p>
+    <p><strong>What this proves:</strong> Doesn't conflate "AI system" with "MCP protocol participant" — a common early confusion.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>3. (Intermediate) Can one host connect to multiple servers at once? What does that look like?</h2>
+    <p><strong>Strong answer:</strong> Yes, and it's the common case, not an edge case. The host runs one client per server connection — e.g., a filesystem server, a database server, and an internal API server, each as an independent process, each with its own client inside the host. The host is then responsible for merging the resulting tool catalogs into whatever it presents to the model.</p>
+    <p><strong>Red flag:</strong> Assumes a 1:1 host-to-server relationship, or doesn't know who's responsible for merging multiple servers' tool catalogs.</p>
+    <p><strong>Follow-up:</strong> "What happens if two of those servers both expose a tool called `search`?"</p>
+    <p><strong>What this proves:</strong> Understands the architecture scales to realistic multi-server setups, which is the norm in production, not the exception.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>4. (Intermediate) Two teams both want to consume the same internal data through MCP. What organizational problem does this create that a single-consumer setup doesn't have?</h2>
+    <p><strong>Strong answer:</strong> Server ownership. Once more than one host/team depends on a server, someone has to own approving changes to it — a schema change that's fine for one consumer might break the other. This isn't a protocol problem, it's the same cross-team API ownership problem any shared internal service has, and it needs an explicit owner and change process, not an informal "whoever wrote the code" default.</p>
+    <p><strong>Red flag:</strong> Treats this as a purely technical problem (versioning, schemas) without naming the organizational/ownership dimension.</p>
+    <p><strong>Follow-up:</strong> "How would you version the server so both teams' consumers keep working through a schema change?"</p>
+    <p><strong>What this proves:</strong> Recognizes that architecture decisions have organizational consequences, not just technical ones — important for anyone who'll eventually own a shared server.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>5. (Senior) You're reviewing a design where a team wants to embed MCP client logic directly inside their model-serving layer instead of their application layer. What's your concern?</h2>
+    <p><strong>Strong answer:</strong> The host role is supposed to own user-facing concerns — which servers to connect to, how to merge tool catalogs, how to handle a server going down — and those are product/application decisions, not model-serving decisions. Embedding client logic in the model layer couples infrastructure that should scale and fail independently (model serving vs. tool orchestration), and makes it harder to reuse the same model-serving layer for a product that needs a different set of servers. The question to ask: does this design let you swap which servers are connected without touching the model-serving code? If not, the boundary is in the wrong place.</p>
+    <p><strong>Red flag:</strong> No concern at all, or a purely aesthetic objection ("that's not how it's usually done") without explaining the coupling risk.</p>
+    <p><strong>Follow-up:</strong> "How would you refactor this to restore a clean host/client boundary?"</p>
+    <p><strong>What this proves:</strong> Can apply the host/client/server boundary as a real architectural constraint, not just a diagram to memorize.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>6. (Architect) Design the ownership model for an org with 6 MCP servers and 4 hosts, all internal. What do you put in place?</h2>
+    <p><strong>Strong answer:</strong> Assign an explicit owning team per server (not per host) with a documented change/deprecation process — a schema or breaking-change proposal, a notification path to all known consuming hosts, and a versioning strategy so consumers aren't forced to update in lockstep. Maintain a registry (even a simple one) mapping servers to owners and known consumers, since "who currently depends on this" tends to go undocumented until a change breaks something. Treat each server as an internal API product, because that's what it functionally is once more than one host depends on it — the MCP protocol doesn't give you this governance for free, it only gives you the wire format.</p>
+    <p><strong>Red flag:</strong> Proposes a purely technical solution (e.g. "just version the schema") with no mention of ownership, discovery/registry, or a change-notification process.</p>
+    <p><strong>Follow-up:</strong> "How do you discover that a server has an undocumented 5th consumer nobody told the owning team about?"</p>
+    <p><strong>What this proves:</strong> Architect-level thinking: treats server governance as an organizational design problem, with the protocol as only one piece of it.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>7. (Senior) A host you're building needs to present tools from 5 different servers to the model as one coherent list. What design decisions does that involve?</h2>
+    <p><strong>Strong answer:</strong> At minimum: namespacing or prefixing to avoid tool-name collisions across servers (see Q3's follow-up), deciding how to handle a server that's slow or down when the list is assembled (fail the whole request, or degrade gracefully by omitting that server's tools), and deciding whether to cache the merged catalog or re-fetch it per conversation. None of this is specified by MCP itself — it's host-side design work the protocol deliberately leaves open.</p>
+    <p><strong>Red flag:</strong> Assumes merging tool catalogs is automatic or protocol-defined, with no host-side design decisions involved.</p>
+    <p><strong>Follow-up:</strong> "How would a user know which underlying server a given tool call actually went to, if something goes wrong?"</p>
+    <p><strong>What this proves:</strong> Understands where MCP's responsibility ends and host-application engineering begins.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>8. (Architect) Would you ever design a system where the same process acts as both a host and a server? What are the risks?</h2>
+    <p><strong>Strong answer:</strong> It's possible and sometimes reasonable (e.g., a tool that itself needs to call other MCP servers as part of fulfilling a request), but it blurs a boundary that's useful for reasoning about trust and failure isolation — a process that's both consuming and exposing capabilities has a larger attack surface and a harder-to-reason-about failure mode (is a hang because the thing you called is stuck, or because a caller is stuck waiting on you?). A defensible answer allows for it but names the trade-off explicitly rather than treating host/server as always cleanly separate processes.</p>
+    <p><strong>Red flag:</strong> Either says "never, that's not how MCP works" (too rigid — nothing in the protocol forbids it) or sees no risk at all in combining the roles.</p>
+    <p><strong>Follow-up:</strong> "How would you scope permissions differently for the 'acting as a server' half of that process versus the 'acting as a host' half?"</p>
+    <p><strong>What this proves:</strong> Can reason about the host/client/server model as a set of responsibilities, not a rigid deployment topology — and sees the security implications of collapsing it.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="practice/index.html">&larr; Practice Bank</a>
+    <a href="project/index.html">Build the Project &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

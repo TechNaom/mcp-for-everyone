@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Integration Problem MCP Solves — MCP for Everyone</title>
+<meta name="description" content="Why bespoke tool integrations don't scale across many models and many tools, and what problem MCP actually solves.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-01">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../../index.html">&larr; Back to all chapters</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 1</span>
+    <span class="badge-difficulty">Beginner</span>
+    <span class="reading-time">~20 min</span>
+  </div>
+
+  <h1>The Integration Problem MCP Solves</h1>
+  <p class="lede">
+    Before any diagram of clients and servers, there's a much simpler
+    question: why does this protocol need to exist at all? This chapter
+    builds the problem before naming the solution.
+  </p>
+
+  <nav class="page-toc" aria-label="On this page">
+    <span class="toc-label">On this page</span>
+    <a href="#hook">1. An assistant that can reason but can't act</a>
+    <a href="#bespoke">2. The bespoke-integration trap</a>
+    <a href="#n-times-m">3. N tools times M models</a>
+    <a href="#what-mcp-is">4. What MCP actually is</a>
+    <a href="#not-a-silver-bullet">5. What MCP doesn't solve</a>
+    <a href="#production">6. Production scenario: a support platform's third rewrite</a>
+    <a href="#mistakes">7. Common mistakes</a>
+    <a href="#thought-process">8. Builder thought process</a>
+    <a href="#recap">9. Points to remember</a>
+  </nav>
+
+  <div class="hook" id="hook">
+    <p>
+      A support team wires an LLM into their helpdesk. It reads tickets,
+      drafts replies, summarizes threads — genuinely useful. Then someone
+      asks the obvious next question: "can it just look up the customer's
+      order status instead of asking them to paste it in?"
+    </p>
+    <p>
+      That requires the model to <em>do</em> something — call an API,
+      run a query — not just read and write text. So an engineer writes a
+      Python function, wraps it as a "tool" in whatever SDK they're using,
+      and wires it into the prompt. It works. Ship it.
+    </p>
+    <p>
+      Three months later: the team wants the same order-lookup capability
+      in a Slack bot built on a different framework. Then a different
+      team, building on a different model provider, wants it too. Each
+      time, someone re-implements the same idea — call this API, shape
+      the result this way — in a slightly different shape, because
+      there's no shared contract for "here's how a model calls a tool,"
+      only whatever each SDK happened to invent.
+    </p>
+  </div>
+
+  <section id="bespoke" class="subtopic">
+    <h2>The Bespoke-Integration Trap</h2>
+    <p>
+      Nothing about the order-lookup function is hard to write. The
+      problem shows up in what happens after it works once:
+    </p>
+    <ul>
+      <li>The Slack bot's framework expects tools shaped differently, so
+      the function gets rewritten, not reused.</li>
+      <li>A second model provider has its own function-calling format, so
+      the schema gets rewritten again.</li>
+      <li>Nobody remembers which of the four copies has the latest bug
+      fix, because they're not actually the same code anymore.</li>
+      <li>Permissions get bolted onto each copy separately — and
+      inconsistently, since nobody's coordinating.</li>
+    </ul>
+    <p>
+      This is the same problem software has solved before, over and
+      over: without a shared interface, every consumer re-implements the
+      producer's logic slightly differently, and the two drift apart. The
+      fix is always the same shape — define a contract once, so both
+      sides can be built independently.
+    </p>
+  </section>
+
+  <section id="n-times-m" class="subtopic">
+    <h2>N Tools Times M Models</h2>
+    <p>
+      Scale the picture up. Say an organization ends up with 15 internal
+      tools (order lookup, ticket search, inventory check, runbook fetch,
+      and so on) and wants them usable from 4 different AI surfaces
+      (a chat assistant, a coding agent, a Slack bot, an internal CLI).
+      Without a shared protocol, that's up to 15 × 4 = 60 bespoke
+      integrations to write and maintain — each one a slightly different
+      shape, each one a separate thing that can break.
+    </p>
+    <figure class="diagram-figure">
+      <pre><code>Without a shared protocol:            With a shared protocol:
+
+Tool A --- integration --- Model 1     Tool A ---\        /--- Model 1
+Tool A --- integration --- Model 2     Tool B ----+-- MCP +-- Model 2
+Tool B --- integration --- Model 1     Tool C ---/        \--- Model 3
+Tool B --- integration --- Model 2
+Tool C --- integration --- Model 1     N tools + M models = N + M
+Tool C --- integration --- Model 2     integrations against ONE contract,
+                                        not N x M bespoke ones.
+N tools x M models = N x M
+bespoke integrations.</code></pre>
+      <figcaption>The integration count grows multiplicatively without a
+      shared contract, and additively with one.</figcaption>
+    </figure>
+    <p>
+      This is exactly the shape of problem that USB solved for
+      peripherals, that SQL solved for databases, that HTTP solved for
+      documents. MCP is that same move applied to "how does an AI system
+      reach a tool or a piece of data."
+    </p>
+  </section>
+
+  <section id="what-mcp-is" class="subtopic">
+    <h2>What MCP Actually Is</h2>
+    <div class="what-is">
+      <span class="label">What is... MCP?</span>
+      The Model Context Protocol is an open specification for how an AI
+      application (the <strong>host</strong>) connects to something that
+      exposes tools, data, or reusable prompts (a <strong>server</strong>),
+      through a standard client. Write a server once; any MCP-speaking
+      host can use it, regardless of which model or framework that host
+      runs. Chapter 2 covers the host/client/server roles in full; for now,
+      the important part is <em>why</em> this shared shape matters, not
+      the exact names.
+    </div>
+    <p>
+      Concretely, that means: the order-lookup function from the opening
+      story gets written once, as an MCP server. The support chat
+      assistant, the Slack bot, and the internal CLI each connect to it
+      as MCP clients, using the same protocol, regardless of which model
+      each one runs on. One implementation, one place to fix bugs, one
+      place to update permissions.
+    </p>
+  </section>
+
+  <section id="not-a-silver-bullet" class="subtopic">
+    <h2>What MCP Doesn't Solve</h2>
+    <p>
+      Worth being honest about scope this early, since it sets
+      expectations for the whole course:
+    </p>
+    <ul>
+      <li><strong>MCP doesn't make a tool safe.</strong> A poorly
+      designed or over-permissioned tool is just as dangerous exposed
+      over MCP as it was as a bespoke function — the protocol
+      standardizes the interface, not the judgment behind what you expose
+      through it. Security is Module 5, not an automatic side effect of
+      "using the standard protocol."</li>
+      <li><strong>MCP doesn't pick your model or your agent framework
+      for you.</strong> It's a wire protocol tools speak, not an opinion
+      about which LLM or orchestration library should call them.</li>
+      <li><strong>MCP doesn't eliminate integration work</strong> — it
+      turns N×M bespoke integrations into a smaller, shared amount of
+      work, not zero work.</li>
+    </ul>
+  </section>
+
+  <section id="production" class="subtopic">
+    <h2>Production Scenario: A Support Platform's Third Rewrite</h2>
+    <p>
+      A SaaS support platform built an order-lookup tool for their chat
+      assistant in 2025. In early 2026 they added a coding-agent
+      integration for internal engineers and rewrote the tool to fit that
+      framework's tool format. Mid-2026, a new Slack-based on-call bot
+      needed the same lookup, and rather than write a third bespoke
+      version, the platform team migrated the original function to an
+      MCP server. Every future consumer — including two more internal
+      tools built later that year — connected as an MCP client instead of
+      getting a fourth, fifth, and sixth rewrite. The lesson isn't "MCP
+      is magic" — it's that the second rewrite was the signal they should
+      have stopped rewriting and started standardizing.
+    </p>
+  </section>
+
+  <section id="mistakes" class="subtopic">
+    <h2>Common Mistakes</h2>
+    <ul>
+      <li>Adopting MCP for a single tool, single consumer situation where
+      a direct function call would be simpler — the protocol earns its
+      keep once there's more than one consumer or the tool needs to be
+      reused, not automatically.</li>
+      <li>Assuming "MCP" means "secure" or "production-ready" by default
+      — it's a contract for connection, not a guarantee about what's on
+      the other end of it.</li>
+      <li>Treating this as an agent-framework decision. MCP is a protocol
+      tools and data sources speak; the agent framework or orchestration
+      layer on the host side is a separate, independent choice.</li>
+    </ul>
+  </section>
+
+  <section id="thought-process" class="subtopic">
+    <h2>Builder Thought Process</h2>
+    <div class="thinking-box">
+      <p><strong>Problem:</strong> the support platform needed the same
+      capability (order lookup) reachable from three different AI
+      surfaces, and had already rewritten it twice.</p>
+      <p><strong>Assumptions:</strong> a third rewrite would cost roughly
+      the same as the first two, and a fourth was coming based on the
+      product roadmap.</p>
+      <p><strong>Approaches considered:</strong> (a) rewrite a third time
+      and accept ongoing rewrite cost as the norm; (b) build an internal
+      shared library imported by each consumer; (c) expose it as an MCP
+      server.</p>
+      <p><strong>Why not (b):</strong> a shared library still requires
+      each consumer to run the same language/runtime and import it
+      directly — it doesn't help the Slack bot if it's built in a
+      different stack, and it doesn't give any standard way for a model
+      to discover what the library offers.</p>
+      <p><strong>Decision:</strong> MCP server, because it decouples
+      "what the tool does" from "what stack the consumer runs," and
+      because a fourth and fifth consumer were already anticipated.</p>
+      <p><strong>Reflection:</strong> the deciding factor wasn't "MCP is
+      the modern choice" — it was a concrete, counted cost (two rewrites
+      already, more expected) that justified the standardization
+      investment.</p>
+    </div>
+  </section>
+
+  <section id="recap" class="subtopic">
+    <div class="points-to-remember">
+      <h2>Points To Remember</h2>
+      <ul>
+        <li>Bespoke tool integrations don't fail immediately — they fail
+        by multiplying: every new tool-consumer pair is a new bespoke
+        shape to write and maintain.</li>
+        <li>Without a shared protocol, N tools and M consumers can mean
+        up to N × M integrations; a shared protocol collapses that toward
+        N + M.</li>
+        <li>MCP standardizes the connection contract between hosts and
+        tool/data servers — it does not automatically make a tool secure,
+        pick your model, or eliminate integration work entirely.</li>
+        <li>The decision to adopt MCP for a given tool should be based on
+        a real, countable cost (multiple consumers, repeated rewrites),
+        not adoption for its own sake.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="what-is">
+    <span class="label">Interview questions (4 levels)</span>
+    See <a href="interview-questions.html">Chapter 1 interview questions</a>.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../../index.html">&larr; All Chapters</a>
+    <a href="quiz.html">Take the Quiz &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+    <span><a href="https://github.com/technaom/mcp-for-everyone">github.com/technaom/mcp-for-everyone</a></span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

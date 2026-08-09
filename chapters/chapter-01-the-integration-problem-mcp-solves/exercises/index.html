@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Integration Problem MCP Solves Exercises — MCP for Everyone</title>
+<meta name="description" content="Hands-on exercises for The Integration Problem MCP Solves.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-01">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../quiz.html">&larr; Back to the quiz</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 1 Exercises</span>
+    <span class="reading-time">~20 min</span>
+  </div>
+  <h1>Exercises: The Integration Problem MCP Solves</h1>
+  <p>This chapter is conceptual — no code yet, that starts in Chapter 4.
+  These exercises build the judgment you'll need before you write a
+  single tool.</p>
+
+  <div class="task-card">
+    <h3><span class="task-num">1</span> Count the integrations</h3>
+    <p>An org has 8 internal tools and 3 AI surfaces that need them.
+    Calculate the bespoke integration count (N×M) versus the
+    shared-protocol count (N+M). Write one sentence on what the gap
+    represents in practice.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">2</span> Spot the trap</h3>
+    <p>Reread the "bespoke-integration trap" section. Name a real or
+    hypothetical example from your own work (or a plausible one) where
+    the same logic got reimplemented in more than one place and drifted
+    apart. What was the actual cost when it drifted?</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">3</span> (Production-gear) The one-consumer test</h3>
+    <p>List three tools you might build for an AI assistant. For each,
+    decide: does it have (or will it soon have) more than one consumer?
+    Which ones would you build as a direct function call today, and
+    which would you build as an MCP server from day one, and why?</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">4</span> (Production-gear) Security isn't included</h3>
+    <p>Take one tool from Exercise 3 that you'd expose over MCP. Name one
+    thing that could go wrong if that tool is over-permissioned — and
+    explain why moving it to MCP does not, by itself, fix that risk.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">5</span> (Production-gear) The migration call</h3>
+    <p>A company has 12 bespoke tool integrations across 3 products, no
+    MCP yet. You have budget to migrate 3 of them this quarter. Given
+    only "reuse count" as your ranking criterion, describe how you'd
+    decide which 3 to migrate first — and what additional information
+    you'd want before finalizing that list.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">6</span> Explain it to a skeptic</h3>
+    <p>Write a 3-sentence explanation of why MCP exists, aimed at a
+    engineer who says "isn't this just function calling with extra
+    steps?" Your explanation must include the word "reuse" and must not
+    use the word "standard" as a substitute for actually explaining the
+    problem.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../quiz.html">&larr; Back to Quiz</a>
+    <a href="../practice/index.html">Practice Bank &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Architecture: Hosts, Clients, Servers — MCP for Everyone</title>
+<meta name="description" content="The three MCP roles, how they relate, and how to map a real product onto them.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-02">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../../index.html">&larr; Back to all chapters</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 2</span>
+    <span class="badge-difficulty">Beginner</span>
+    <span class="reading-time">~25 min</span>
+  </div>
+
+  <h1>MCP Architecture: Hosts, Clients, Servers</h1>
+  <p class="lede">
+    Three roles, three responsibilities. Get this mental model solid now
+    and every later chapter — servers in Module 3, clients in Module 4,
+    security boundaries in Module 5 — slots into it cleanly.
+  </p>
+
+  <nav class="page-toc" aria-label="On this page">
+    <span class="toc-label">On this page</span>
+    <a href="#hook">1. Where does "the AI" actually live?</a>
+    <a href="#three-roles">2. The three roles</a>
+    <a href="#one-host-many-servers">3. One host, many servers</a>
+    <a href="#real-mapping">4. Mapping this onto a real product</a>
+    <a href="#architecture-view">5. Architecture view</a>
+    <a href="#production">6. Production scenario: who owns the server?</a>
+    <a href="#mistakes">7. Common mistakes</a>
+    <a href="#thought-process">8. Builder thought process</a>
+    <a href="#recap">9. Points to remember</a>
+  </nav>
+
+  <div class="hook" id="hook">
+    <p>
+      Chapter 1 established why MCP exists. Now: when someone says "our
+      MCP server," which piece of the system are they actually talking
+      about? Is the model itself the server? Is the chat app the client?
+      Getting this wrong makes every later diagram, every debugging
+      conversation, and every security discussion harder than it needs to
+      be — because "the server" and "the client" mean something specific
+      and non-obvious the first time you meet them.
+    </p>
+  </div>
+
+  <section id="three-roles" class="subtopic">
+    <h2>The Three Roles</h2>
+    <div class="what-is">
+      <span class="label">What is... a Host?</span>
+      The AI-powered application the person actually uses — Claude
+      Desktop, an IDE with an AI assistant, a custom chat app. The host
+      is what decides which servers to connect to and orchestrates the
+      conversation between the model and those servers.
+    </div>
+    <div class="what-is">
+      <span class="label">What is... a Client?</span>
+      The connection inside the host that speaks MCP to one specific
+      server. A host that talks to three servers runs three clients — one
+      per connection. The client handles the protocol mechanics (sending
+      requests, parsing responses); it doesn't have its own UI or
+      identity beyond that connection.
+    </div>
+    <div class="what-is">
+      <span class="label">What is... a Server?</span>
+      The process that exposes tools, resources, and prompts — the notes
+      server and bookmarks server from Chapter 4 are both MCP servers.
+      A server doesn't know or care which host is connecting to it; it
+      just responds to requests according to the protocol.
+    </div>
+    <p>
+      Notice what's <em>not</em> one of these three roles: the model
+      itself. The LLM is something the host uses to decide which tools to
+      call and how to use their results — it's not a party in the MCP
+      conversation at all. MCP is a protocol between a host application
+      and servers; the model is an implementation detail of how the host
+      makes decisions.
+    </p>
+  </section>
+
+  <section id="one-host-many-servers" class="subtopic">
+    <h2>One Host, Many Servers</h2>
+    <p>
+      The relationship is rarely one-to-one. A single host commonly
+      connects to several servers at once — a filesystem server, a
+      database server, an internal API server — each running as its own
+      process, each with its own client connection from the host.
+    </p>
+    <figure class="diagram-figure">
+      <pre><code>                    +------------------+
+                    |       Host        |  (Claude Desktop, an IDE, a
+                    |  (runs the model,  |   custom chat app...)
+                    |   decides what to  |
+                    |   call and when)   |
+                    +--------+----------+
+                             |
+          +------------------+------------------+
+          |                  |                  |
+     +----v----+       +-----v-----+      +-----v-----+
+     | Client A |       | Client B  |      | Client C  |
+     +----+----+       +-----+-----+      +-----+-----+
+          |                  |                  |
+     +----v----+       +-----v-----+      +-----v-----+
+     | Server:  |       | Server:   |      | Server:   |
+     | Notes    |       | Bookmarks |      | Filesystem|
+     +----------+       +-----------+      +-----------+</code></pre>
+      <figcaption>One host process, three independent client connections,
+      three independent server processes. Each server has no idea the
+      other two exist.</figcaption>
+    </figure>
+    <p>
+      This is exactly why the N×M problem from Chapter 1 mattered: each
+      of these servers can be reused by a completely different host
+      tomorrow, without either side needing to know about the other's
+      internals — only the shared protocol.
+    </p>
+  </section>
+
+  <section id="real-mapping" class="subtopic">
+    <h2>Mapping This Onto a Real Product</h2>
+    <p>
+      Take the Chapter 4 notes server as a concrete example: if you ran
+      it with <code>uv run mcp dev notes_server.py</code>, the MCP
+      Inspector web UI you connected to was acting as the
+      <strong>host</strong> — it's the application the developer
+      interacted with. It opened one <strong>client</strong> connection
+      to your Python process, which was the <strong>server</strong>. No
+      LLM was involved in that exercise at all — which is a useful thing
+      to notice: you can fully exercise the host/client/server
+      relationship, and debug a server end to end, without a model in the
+      loop.
+    </p>
+  </section>
+
+  <section id="architecture-view" class="subtopic">
+    <h2>Architecture View</h2>
+    <p>
+      A useful way to keep the roles straight: the <strong>host</strong>
+      is the only role with a user-facing identity and the only one that
+      talks to a model. <strong>Clients</strong> are invisible
+      infrastructure — a user never "opens a client." <strong>Servers</strong>
+      are the only role that can be shared, unmodified, across completely
+      different hosts and products, which is the entire point established
+      in Chapter 1.
+    </p>
+    <table>
+      <thead><tr><th>Role</th><th>Has a UI?</th><th>Talks to the model?</th><th>Reusable across products?</th></tr></thead>
+      <tbody>
+        <tr><td>Host</td><td>Yes</td><td>Yes</td><td>No — it's the specific application</td></tr>
+        <tr><td>Client</td><td>No</td><td>No</td><td>No — it's a connection, part of the host</td></tr>
+        <tr><td>Server</td><td>No (usually)</td><td>No</td><td>Yes — this is the whole point</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="production" class="subtopic">
+    <h2>Production Scenario: Who Owns the Server?</h2>
+    <p>
+      A retail company's platform team builds an inventory-lookup MCP
+      server. The customer-support chat host (owned by the support team)
+      and the internal ops dashboard host (owned by a different team)
+      both connect to it. Six months in, the ops team wants to add a new
+      field to the inventory response. Who approves that change? Not the
+      support team — they don't own the server. This is the practical
+      consequence of the architecture: once a server has multiple host
+      consumers, changing it becomes a cross-team coordination problem,
+      not a unilateral decision by whichever team happens to be editing
+      the code that day. Server ownership needs to be as explicit as any
+      other shared internal API.
+    </p>
+  </section>
+
+  <section id="mistakes" class="subtopic">
+    <h2>Common Mistakes</h2>
+    <ul>
+      <li>Calling the model "the MCP server" — the model isn't a party in
+      the protocol at all; it's what the host uses internally to decide
+      what to call.</li>
+      <li>Assuming a host can only connect to one server at a time — most
+      real hosts (Claude Desktop, IDEs with MCP support) connect to
+      several simultaneously.</li>
+      <li>Treating "client" as a user-facing product name — in casual
+      conversation people sometimes say "MCP client" to mean the whole
+      host application, but architecturally the client is just the
+      protocol connection inside it.</li>
+      <li>Forgetting that a shared server needs real ownership once more
+      than one host depends on it — see the production scenario above.</li>
+    </ul>
+  </section>
+
+  <section id="thought-process" class="subtopic">
+    <h2>Builder Thought Process</h2>
+    <div class="thinking-box">
+      <p><strong>Problem:</strong> two teams (support chat, ops dashboard)
+      both want to consume the same inventory data, and initially built
+      two separate integrations before anyone noticed the duplication.</p>
+      <p><strong>Assumptions:</strong> both teams' hosts can speak MCP;
+      the inventory data source is stable enough to be worth
+      standardizing (per the Chapter 1 judgment call).</p>
+      <p><strong>Approach:</strong> consolidate into one inventory MCP
+      server, owned by the platform team, with both hosts as clients.</p>
+      <p><strong>Validation:</strong> confirmed both existing bespoke
+      integrations could be replaced with equivalent tool calls against
+      the new server before decommissioning either one.</p>
+      <p><strong>Observed friction:</strong> the first schema-change
+      request came from a team that didn't own the server, surfacing the
+      ownership question immediately.</p>
+      <p><strong>Decision:</strong> formalize server ownership and a
+      change-request process before the second consumer's team got
+      frustrated waiting on undocumented informal approval.</p>
+    </div>
+  </section>
+
+  <section id="recap" class="subtopic">
+    <div class="points-to-remember">
+      <h2>Points To Remember</h2>
+      <ul>
+        <li>Host: the user-facing application; the only role that talks
+        to the model. Client: the protocol connection inside the host,
+        one per server. Server: the process exposing tools/resources/prompts,
+        reusable across hosts.</li>
+        <li>The model itself is not a party in the MCP protocol — it's an
+        implementation detail of how the host decides what to call.</li>
+        <li>One host commonly runs multiple clients, each connected to a
+        different independent server process.</li>
+        <li>Once a server has more than one host depending on it, it
+        needs real ownership and a change process — the architecture
+        creates a coordination problem the moment reuse actually happens.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="what-is">
+    <span class="label">Interview questions (4 levels)</span>
+    See <a href="interview-questions.html">Chapter 2 interview questions</a>.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../../index.html">&larr; All Chapters</a>
+    <a href="quiz.html">Take the Quiz &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+    <span><a href="https://github.com/technaom/mcp-for-everyone">github.com/technaom/mcp-for-everyone</a></span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

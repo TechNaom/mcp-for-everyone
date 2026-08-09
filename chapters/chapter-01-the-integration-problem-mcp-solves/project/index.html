@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Integration Problem MCP Solves Project — MCP for Everyone</title>
+<meta name="description" content="Project for The Integration Problem MCP Solves: write an integration-cost memo.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-01">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../interview-questions.html">&larr; Back to interview questions</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 1 Project</span>
+    <span class="reading-time">~30 min · Level 1, Guided</span>
+  </div>
+  <h1>Write an Integration-Cost Memo</h1>
+  <p>A short written artifact — the kind of one-page memo that actually
+  gets a standardization decision approved at a real company.</p>
+
+  <div class="hook">
+    <p>
+      Before Chapter 4 has you writing MCP servers, practice the
+      judgment call that should come first: deciding whether a tool is
+      even worth standardizing. This project has no code — it's a
+      one-page memo, the artifact a tech lead would actually write to get
+      budget approved.
+    </p>
+  </div>
+
+  <h2>Build it</h2>
+  <p>Pick a hypothetical (or real) organization and write a memo, no more
+  than one page, that includes:</p>
+  <ul>
+    <li>A list of 4–8 internal tools and the AI surfaces/products that
+    need each one today (or will realistically need it within a year).</li>
+    <li>The bespoke-integration count (sum of tool × consumer pairs) versus
+    the shared-protocol count (tools + consumers), shown as numbers, not
+    just the formula.</li>
+    <li>A ranked recommendation: which 2–3 tools should move to MCP
+    servers first, and why those and not the others.</li>
+    <li>One explicit risk your recommendation does NOT address (per the
+    lesson's "what MCP doesn't solve" section) — security, operational
+    burden, or something else — so the reader knows what this memo is not
+    claiming to have solved.</li>
+  </ul>
+
+  <div class="what-is">
+    <span class="label">Verification</span>
+    A strong memo passes this test: could someone who hasn't read this
+    chapter understand your recommendation and why you ranked the tools
+    the way you did, using only your memo? If it requires the reader to
+    already agree that "MCP is good," it's not doing its job — it should
+    make the case with numbers and reuse counts, the way the lesson's
+    support-platform example did.
+  </div>
+
+  <div class="points-to-remember">
+    <h2>Why this project matters</h2>
+    <p>
+      Every chapter from here on assumes you can tell the difference
+      between "this tool is worth building as an MCP server" and "this
+      tool is fine as a plain function." That judgment doesn't come from
+      knowing the protocol — it comes from being able to count and
+      communicate the actual cost being solved, which is exactly what
+      this memo practices.
+    </p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../interview-questions.html">&larr; Interview Questions</a>
+    <a href="../../../index.html">All Chapters &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

@@ -4,7 +4,7 @@
   and home.js render navigation from this file. A chapter is "live" iff
   it has a `path` — omit `path` for chapters that don't exist yet, do not
   set a placeholder path, or sidebar/home will link to a 404.
-  Only Chapter 4 has content today — see PROJECT_STATE.md.
+  Chapters 1-4 have content today — see PROJECT_STATE.md.
 */
 
 window.MFE_MODULES = [
@@ -17,7 +17,16 @@ window.MFE_MODULES = [
         id: "chapter-01",
         num: 1,
         title: "The Integration Problem MCP Solves",
-        description: "Why bespoke tool integrations don't scale across many models and many tools."
+        path: "chapters/chapter-01-the-integration-problem-mcp-solves/lesson.html",
+        description: "Why bespoke tool integrations don't scale across many models and many tools.",
+        subtopics: [
+          { id: "hook", title: "An assistant that can reason but can't act" },
+          { id: "bespoke", title: "The bespoke-integration trap" },
+          { id: "n-times-m", title: "N tools times M models" },
+          { id: "what-mcp-is", title: "What MCP actually is" },
+          { id: "not-a-silver-bullet", title: "What MCP doesn't solve" },
+          { id: "recap", title: "Points to remember" }
+        ]
       }
     ]
   },
@@ -30,13 +39,32 @@ window.MFE_MODULES = [
         id: "chapter-02",
         num: 2,
         title: "MCP Architecture: Hosts, Clients, Servers",
-        description: "The three roles and how they relate."
+        path: "chapters/chapter-02-mcp-architecture-hosts-clients-servers/lesson.html",
+        description: "The three roles and how they relate.",
+        subtopics: [
+          { id: "hook", title: "Where does \"the AI\" actually live?" },
+          { id: "three-roles", title: "The three roles" },
+          { id: "one-host-many-servers", title: "One host, many servers" },
+          { id: "real-mapping", title: "Mapping this onto a real product" },
+          { id: "architecture-view", title: "Architecture view" },
+          { id: "recap", title: "Points to remember" }
+        ]
       },
       {
         id: "chapter-03",
         num: 3,
         title: "The MCP Message Lifecycle",
-        description: "Stateless JSON-RPC, capability negotiation, and the 2026-07-28 vs 2025-11-25 compatibility story."
+        path: "chapters/chapter-03-the-mcp-message-lifecycle/lesson.html",
+        description: "Stateless JSON-RPC, capability negotiation, and the 2026-07-28 vs 2025-11-25 compatibility story.",
+        subtopics: [
+          { id: "hook", title: "Why \"just JSON-RPC\" isn't the whole story" },
+          { id: "three-message-types", title: "The three JSON-RPC message types" },
+          { id: "meta", title: "Where protocol version and capabilities live" },
+          { id: "worked-trace", title: "A worked exchange, field by field" },
+          { id: "statelessness", title: "What \"stateless\" really means" },
+          { id: "compatibility", title: "Modern vs. legacy compatibility" },
+          { id: "recap", title: "Points to remember" }
+        ]
       }
     ]
   },

@@ -64,11 +64,29 @@ production-grade, interview-ready, original content only).
       down from RAG's numbers (8 exercises/10 scenarios/15 interview Qs)
       to this course's documented, focused-topic bar (6/6/8) — see the
       template's new preamble and `docs/course-architecture.md`.
+- [x] Step 6 (Modules 1–2): Chapters 1–3 built to full production
+      quality and validated (`quality-audits/chapter-0{1,2,3}-audit.md`
+      — all pass). Chapters 1–2 are conceptual (no code labs, per the
+      curriculum map) with written/diagram project artifacts instead of
+      code. Chapter 3 (message lifecycle) required the same
+      test-before-writing discipline as Chapter 4: every JSON-RPC
+      message shape, the full modern/legacy compatibility matrix, and
+      the `_meta` field table in the lesson were fetched directly from
+      the official 2026-07-28 spec pages on modelcontextprotocol.io, not
+      recalled from memory. Chapter 3's exercises and project reuse the
+      Chapter 4 notes server (via `sys.path` import from
+      `chapters/chapter-04-your-first-mcp-server/exercises/solution.py`)
+      and were run against the real SDK — this caught a wrong assumption
+      in the project's first draft (that calling a nonexistent tool
+      raises a Python exception; it actually returns a normal
+      `is_error=True` result, same as any other tool failure), corrected
+      before shipping. All 4 live chapters' interview banks now have 8
+      questions each (2 per level), matching the course's stated floor.
 
 ## Pending / Not Started
 
-- [ ] Step 6: Build remaining 12 chapters, module by module, validating
-      after each module.
+- [ ] Step 6 continued: build Chapters 5–13 (Modules 3–7), module by
+      module, validating after each module.
 - [ ] Step 7: Build project implementations (L1–L4) and tests.
 - [ ] Step 8: Assessments — quizzes, written exams, interview questions,
       architecture challenges (beyond what ships per-chapter).
@@ -91,13 +109,20 @@ production-grade, interview-ready, original content only).
 
 ## Known Issues
 
-- Chapter 4 references forward to Chapters 6, 9, and 12, which don't
+- Chapters 3–4 reference forward to Chapters 6, 9, and 12, which don't
   exist yet — links are plain text ("see Chapter 6"), not hyperlinks, so
   nothing is broken, but re-verify the claims once those chapters are
   written.
-- No root `index.html` yet, so Chapter 4 isn't reachable by navigating
-  the site — only by opening its files directly. Sidebar/progress/quiz
-  JS is wired and will work once `index.html` exists (Step 9).
+- Chapter 3's exercises/project import Chapter 4's solution server via a
+  relative `sys.path` hack (`parents[2] / "chapter-04-.../exercises"`).
+  This is intentional (avoids duplicating the notes server a third time)
+  but it's a real coupling: if Chapter 4's `exercises/solution.py` moves
+  or its function signatures change, Chapter 3's code breaks silently
+  until someone runs it. Re-run Chapter 3's exercises/project any time
+  Chapter 4's exercises/solution.py changes.
+- Chapter 3's lesson worked-trace is labeled as "constructed from the
+  spec's defined shapes," not a literal raw-byte packet capture — see
+  Follow-Up Tasks in `quality-audits/chapter-03-audit.md`.
 
 ## Open Decisions
 
@@ -124,13 +149,13 @@ priority on depth over count).
 
 ## Next Recommended Task
 
-Start Step 6: build Chapters 1–3 (Module 1–2, "Why MCP Exists" and "MCP
-Core Concepts") using Chapter 4 as the template reference — see
-`chapters/chapter-04-your-first-mcp-server/` for the full page set
-(lesson/quiz/exercises/practice/interview/project) and
-`quality-audits/chapter-04-audit.md` for the bar to hit. Validate each
-chapter with a fresh `quality-audits/chapter-0N-audit.md` before moving
-to the next. Chapters 1–2 are conceptual (no code labs required per the
-curriculum map); Chapter 3 will need the same "test code against the
-real SDK before writing it into the lesson" discipline used in Chapter 4,
-since it covers the stateless JSON-RPC message lifecycle directly.
+Module 3 (Chapters 5–6): "Resources & Prompts" and "Transports: stdio
+vs. Streamable HTTP." Chapter 5 can reuse the Chapter 4 notes server
+pattern for a prompts example (test against the real SDK, same
+discipline as Chapters 3–4). Chapter 6 needs the Streamable HTTP
+transport actually exercised (`mcp.run(transport="streamable-http")`
+plus a real HTTP client call), not just described — Chapter 4's cheat
+sheet already names this transport but no chapter has run it yet. This
+is also the chapter where the stateful/stateless compatibility callout
+promised in Chapter 3 needs to land concretely. Validate each with a
+fresh `quality-audits/chapter-0N-audit.md` before moving to Module 4.

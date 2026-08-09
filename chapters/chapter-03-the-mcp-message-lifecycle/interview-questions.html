@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The MCP Message Lifecycle Interview Questions — MCP for Everyone</title>
+<meta name="description" content="Interview questions for The MCP Message Lifecycle.">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-03">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="practice/index.html">&larr; Back to practice bank</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 3 Interview Questions</span>
+    <span class="reading-time">~15 min</span>
+  </div>
+  <h1>Interview Questions: The MCP Message Lifecycle</h1>
+  <p>Grouped by level. Each includes a strong answer, a red flag, and a follow-up.</p>
+
+  <div class="lesson-card">
+    <h2>1. (Beginner) What are the three JSON-RPC message types MCP uses?</h2>
+    <p><strong>Strong answer:</strong> Requests (have an id, expect a response), result/error responses (echo the request's id), and notifications (no id, one-way, no reply expected). Every MCP interaction is built from these three shapes.</p>
+    <p><strong>Red flag:</strong> Can't distinguish a notification from a request, or thinks responses can be sent without a matching id.</p>
+    <p><strong>Follow-up:</strong> "What's supposed to happen if a client sends a notification and the server tries to reply to it anyway?"</p>
+    <p><strong>What this proves:</strong> Has the basic message vocabulary needed to read a protocol trace.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>2. (Beginner) What does a result response's <code>resultType</code> field tell you?</h2>
+    <p><strong>Strong answer:</strong> Whether the request is fully done (<code>"complete"</code>) or the server needs more input before it can finish (<code>"input_required"</code>, part of Multi Round-Trip Requests). If it's missing entirely, that signals an older server and should be treated as <code>"complete"</code> for backward compatibility.</p>
+    <p><strong>Red flag:</strong> Doesn't know this field exists, or assumes every response with a <code>result</code> field is automatically finished.</p>
+    <p><strong>Follow-up:</strong> "Why would a server ever need more than one round trip to answer a single tool call?"</p>
+    <p><strong>What this proves:</strong> Has read past the "happy path" tools/call example into the response shape's actual semantics.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>3. (Intermediate) How does a server know what protocol version and capabilities a client supports, if there's no handshake?</h2>
+    <p><strong>Strong answer:</strong> Every single request carries this information in its <code>_meta</code> field — <code>io.modelcontextprotocol/protocolVersion</code> and <code>io.modelcontextprotocol/clientCapabilities</code> are required on every request, not negotiated once. This is the core of what "stateless" means in the current spec: nothing is inferred from a prior request.</p>
+    <p><strong>Red flag:</strong> Assumes there must be some hidden handshake happening, or can't explain how the current spec differs from a session-based one.</p>
+    <p><strong>Follow-up:</strong> "What happens if a client sends a request without the required protocolVersion field?"</p>
+    <p><strong>What this proves:</strong> Understands the actual mechanism behind "stateless," not just the buzzword.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>4. (Intermediate) Why does the spec say an open stdio connection is "not a conversation"?</h2>
+    <p><strong>Strong answer:</strong> Because the transport (a pipe, an HTTP connection) is just a delivery mechanism — it has no special meaning to the protocol. A client is allowed to send unrelated requests down the same stdio pipe, and a server must not assume two requests on the same connection are part of the same logical task just because they share a transport. Anything that needs to persist across requests must be passed explicitly, by ID, on each request.</p>
+    <p><strong>Red flag:</strong> Assumes a server can safely cache per-connection state between requests (e.g., "remember what the last tool call was") without an explicit identifier.</p>
+    <p><strong>Follow-up:</strong> "How would you design a long-running task (e.g. a report that takes 5 minutes to generate) under this constraint?"</p>
+    <p><strong>What this proves:</strong> Grasps the practical design implication of statelessness, not just its definition.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>5. (Senior) A modern MCP client is silently getting no results from certain calls to a partner's server. Walk through how you'd debug this.</h2>
+    <p><strong>Strong answer:</strong> Following the chapter's production scenario: don't assume your own code is wrong first. Capture a raw request/response pair for a failing call and compare it against the spec's documented modern shapes — specifically, check whether the response includes the expected <code>_meta</code> fields (like <code>serverInfo</code>) and a <code>resultType</code>. Their absence, or a shape resembling an <code>initialize</code>-based session, points to a legacy-era server — a documented failure mode in the compatibility matrix (modern client, legacy server = fails, sometimes silently), not a bug in either side's business logic.</p>
+    <p><strong>Red flag:</strong> Jumps straight to "there's a bug in our tool implementation" without first checking whether the two sides are even speaking compatible protocol eras.</p>
+    <p><strong>Follow-up:</strong> "What would you add to the client so this failure mode surfaces as a clear error instead of a silent one next time?"</p>
+    <p><strong>What this proves:</strong> Debugs systematically from protocol evidence rather than guessing at application-layer causes first — a genuinely senior habit.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>6. (Architect) You're designing a client that must interoperate with both modern and legacy-era MCP servers across your org, indefinitely. What do you build in?</h2>
+    <p><strong>Strong answer:</strong> An explicit era-detection layer, per the spec's documented pattern — attempt the modern approach first (a stdio probe, or a modern HTTP request) and interpret specific, recognized modern errors as "this is a modern server, retry with a different version" rather than "this server doesn't work." Anything else (timeout, unrecognized error, unexpected shape) should trigger a fallback to <code>initialize</code>-based legacy semantics. Cache the determined era per server for the process/session lifetime rather than re-probing every request, per the spec's own guidance, but be willing to re-probe if a cached assumption later fails — servers do get upgraded.</p>
+    <p><strong>Red flag:</strong> Proposes hard-coding which servers are "legacy" in a static config file with no runtime detection, which breaks silently the moment any server is upgraded without a corresponding config change.</p>
+    <p><strong>Follow-up:</strong> "How would you monitor, in production, how many of your org's servers are still legacy — to know when it's safe to drop dual-era support?"</p>
+    <p><strong>What this proves:</strong> Architect-level thinking about protocol evolution as an ongoing operational concern, not a one-time migration checkbox.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>7. (Senior) What's the practical difference between a tool call that fails with is_error=True and one that raises an exception in the client SDK?</h2>
+    <p><strong>Strong answer:</strong> Per the spec's message shapes, a tool-level failure (a raised ValueError inside a tool, or calling a tool that doesn't exist) comes back as a completely normal JSON-RPC result response with is_error=True — it's still a "the request was processed" outcome. A raised exception in the client SDK generally indicates something failed below the protocol level (the connection dropped, the process died, a malformed response). Code that only wraps calls in try/except and never checks is_error will miss the far more common failure mode.</p>
+    <p><strong>Red flag:</strong> Treats these as the same thing, or assumes all tool failures raise catchable exceptions.</p>
+    <p><strong>Follow-up:</strong> "Where in a real error-handling code path would you check is_error, versus where would you need a try/except?"</p>
+    <p><strong>What this proves:</strong> Connects the abstract message-shape knowledge to a concrete, common error-handling bug.</p>
+  </div>
+
+  <div class="lesson-card">
+    <h2>8. (Architect) Design an observability strategy for MCP traffic across an org with dozens of servers, some modern, some legacy. What do you standardize on?</h2>
+    <p><strong>Strong answer:</strong> Standardize on propagating the W3C Trace Context fields already reserved in the spec's `_meta` (`traceparent`, `tracestate`, `baggage`) on every request, so traces correlate across host → client → server boundaries using existing OpenTelemetry tooling rather than inventing a bespoke format. For legacy-era servers that predate this `_meta` convention, accept that trace propagation may be partial or absent, and make that visibility gap itself something you monitor (e.g., "% of requests missing trace context") rather than silently accepting incomplete traces. Pair this with logging `resultType` and `is_error` centrally so failure-mode analysis doesn't require re-deriving it from raw response bodies per team.</p>
+    <p><strong>Red flag:</strong> Proposes a custom, non-standard trace-propagation format when the spec already reserves standard OpenTelemetry fields for exactly this purpose, or ignores the legacy-server visibility gap entirely.</p>
+    <p><strong>Follow-up:</strong> "How would you retrofit trace propagation onto a legacy server you don't own the code for?"</p>
+    <p><strong>What this proves:</strong> Architect-level thinking: builds observability on top of what the protocol already standardizes, rather than reinventing it, while being honest about where standardization doesn't reach yet.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="practice/index.html">&larr; Practice Bank</a>
+    <a href="project/index.html">Build the Project &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Architecture Exercises — MCP for Everyone</title>
+<meta name="description" content="Hands-on exercises for MCP Architecture: Hosts, Clients, Servers.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-02">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../quiz.html">&larr; Back to the quiz</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 2 Exercises</span>
+    <span class="reading-time">~20 min</span>
+  </div>
+  <h1>Exercises: MCP Architecture</h1>
+  <p>Practice mapping the host/client/server roles onto real systems —
+  including ones this course hasn't shown you the internals of yet.</p>
+
+  <div class="task-card">
+    <h3><span class="task-num">1</span> Label the roles</h3>
+    <p>You use an AI coding assistant in your IDE that can read files,
+    run tests, and search the web. Identify which piece is the host, and
+    name at least two things that are plausibly separate MCP servers.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">2</span> Count the clients</h3>
+    <p>If that IDE assistant connects to 4 different servers
+    (filesystem, test runner, web search, git), how many client
+    connections does the host run? Draw or describe the diagram.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">3</span> Find the model</h3>
+    <p>In your diagram from Exercise 2, where does the LLM go? Explain in
+    one sentence why it isn't drawn as a fourth role alongside host,
+    client, and server.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">4</span> (Production-gear) Name the owner</h3>
+    <p>Revisit the retail inventory-server scenario from the lesson. If
+    you were setting up this system from scratch, what would you put in
+    place on day one — before any second consumer shows up — to avoid the
+    ownership ambiguity that caused friction?</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">5</span> (Production-gear) The tool-name collision</h3>
+    <p>A host connects to two servers that both expose a tool named
+    <code>search</code>. This isn't a hypothetical — it will happen once
+    an org has more than a couple of servers. Propose one concrete way a
+    host could disambiguate between them for the model.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">6</span> (Production-gear) The silent server</h3>
+    <p>One of the four servers from Exercise 2 crashes mid-conversation.
+    What should happen to the other three client connections? Should the
+    whole host session fail, or should it degrade gracefully? Justify
+    your answer in terms of the independence the architecture is supposed
+    to provide.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../quiz.html">&larr; Back to Quiz</a>
+    <a href="../practice/index.html">Practice Bank &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

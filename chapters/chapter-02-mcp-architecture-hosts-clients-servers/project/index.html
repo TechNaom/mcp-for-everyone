@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Architecture Project — MCP for Everyone</title>
+<meta name="description" content="Project for MCP Architecture: diagram a multi-server host setup.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-02">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../interview-questions.html">&larr; Back to interview questions</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 2 Project</span>
+    <span class="reading-time">~30 min · Level 1, Guided</span>
+  </div>
+  <h1>Diagram a Multi-Server Host Setup</h1>
+  <p>Draw the architecture for a real (or realistic) product, then
+  pressure-test it with the questions below.</p>
+
+  <div class="hook">
+    <p>
+      Pick a product idea — a personal assistant, a support tool, a
+      coding helper, anything. It needs to reach at least 3 different
+      capabilities (data sources or actions) that don't naturally belong
+      in the same server.
+    </p>
+  </div>
+
+  <h2>Build it</h2>
+  <p>Produce a diagram (ASCII, like the lesson's, or a
+  <a href="https://mermaid.js.org/" target="_blank" rel="noopener">Mermaid</a>
+  sequence/architecture diagram if you prefer) showing:</p>
+  <ul>
+    <li>One host box.</li>
+    <li>One client connection per server (at least 3).</li>
+    <li>Each server, labeled with what it exposes.</li>
+    <li>Where the model sits relative to all of this — and a one-sentence
+    caption explaining why it isn't drawn as a fourth protocol role.</li>
+  </ul>
+
+  <div class="what-is">
+    <span class="label">Verification</span>
+    Answer these about your own diagram: (1) if server #2 crashes, does
+    your host still function for servers #1 and #3? (2) which server, if
+    any, would you expect a second product to reuse unmodified? (3) who
+    would own that reused server once a second product depends on it? If
+    you can't answer all three from your diagram alone, the diagram is
+    missing information a real design doc would need.
+  </div>
+
+  <div class="what-is">
+    <span class="label">Extension challenge</span>
+    Two of your three servers both expose a tool with the same name.
+    Add a note to your diagram showing how the host disambiguates them
+    for the model (see Exercise 5 from this chapter's exercises).
+  </div>
+
+  <div class="points-to-remember">
+    <h2>Why this project matters</h2>
+    <p>
+      Every chapter from here forward assumes you can read and draw this
+      kind of diagram fluently — Module 4's client/host chapters and
+      Module 7's capstone both build directly on this skill. Getting
+      comfortable with it now, on a simple example, pays off later on a
+      much more complex one.
+    </p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../interview-questions.html">&larr; Interview Questions</a>
+    <a href="../../../index.html">All Chapters &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

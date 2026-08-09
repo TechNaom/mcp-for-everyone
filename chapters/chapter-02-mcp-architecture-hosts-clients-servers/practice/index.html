@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Architecture Practice Bank — MCP for Everyone</title>
+<meta name="description" content="Practice bank for MCP Architecture: Hosts, Clients, Servers.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-02">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../exercises/index.html">&larr; Back to exercises</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 2 Practice Bank</span>
+    <span class="reading-time">~20 min</span>
+  </div>
+  <h1>Practice Bank: MCP Architecture</h1>
+  <p>Realistic situations that test whether the host/client/server model
+  is actually load-bearing in your thinking, not just memorized.</p>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Support</span>
+    <h3>The confused bug report</h3>
+    <p>A user files a bug: "the MCP server is slow." Turns out the actual
+    latency is in the host's UI rendering, not any server response. What
+    question would you ask first to figure out where in the
+    host/client/server chain the slowness actually is?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Product</span>
+    <h3>The "add MCP support" feature request</h3>
+    <p>A product manager asks engineering to "add MCP support to our
+    app." Is the app becoming a host, a server, or could it be either
+    depending on the feature? What follow-up question resolves the
+    ambiguity?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Cost</span>
+    <h3>The always-on server</h3>
+    <p>A team builds an MCP server that needs to stay running as a
+    long-lived process to serve multiple hosts over Streamable HTTP,
+    unlike the on-demand stdio server from Chapter 4 that only runs while
+    a host has it open. What operational cost does this introduce that
+    the Chapter 4 example didn't have?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Compliance</span>
+    <h3>The data residency question</h3>
+    <p>Legal asks: "if our host connects to a third-party MCP server,
+    does customer data pass through that server?" Using the
+    host/client/server model, explain what actually flows between host
+    and server during a tool call, so legal can answer their own
+    question accurately.</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Operations</span>
+    <h3>The multi-host server</h3>
+    <p>Your team's inventory server (from the lesson) now has 5 host
+    consumers, not 2. One of them wants a breaking schema change. Sketch,
+    in a few sentences, a rollout approach that doesn't break the other
+    4 hosts on day one.</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Debugging</span>
+    <h3>The wrong mental model</h3>
+    <p>A new engineer on your team keeps referring to "the MCP" as if
+    it's a single running thing, rather than a protocol multiple
+    independent processes speak. What's one concrete example you'd show
+    them to correct this — something they could observe, not just be
+    told?</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../exercises/index.html">&larr; Exercises</a>
+    <a href="../interview-questions.html">Interview Questions &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

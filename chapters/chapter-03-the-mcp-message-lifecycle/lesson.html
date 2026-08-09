@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The MCP Message Lifecycle — MCP for Everyone</title>
+<meta name="description" content="Stateless JSON-RPC, capability negotiation, and the 2026-07-28 vs 2025-11-25 compatibility story, with real message shapes from the spec.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-03">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">All Chapters</a>
+      <a href="../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../../index.html">&larr; Back to all chapters</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 3</span>
+    <span class="badge-difficulty">Intermediate</span>
+    <span class="reading-time">~30 min</span>
+  </div>
+
+  <h1>The MCP Message Lifecycle</h1>
+  <p class="lede">
+    Chapter 4 showed you a wire diagram and let the SDK hide the details.
+    This chapter opens the hood: the exact JSON-RPC shapes MCP uses, why
+    the current spec has no handshake at all, and what actually happens
+    when your host talks to a server built on the older spec.
+  </p>
+
+  <nav class="page-toc" aria-label="On this page">
+    <span class="toc-label">On this page</span>
+    <a href="#hook">1. Why "just JSON-RPC" isn't the whole story</a>
+    <a href="#three-message-types">2. The three JSON-RPC message types</a>
+    <a href="#meta">3. Where protocol version and capabilities actually live</a>
+    <a href="#worked-trace">4. A worked exchange, field by field</a>
+    <a href="#statelessness">5. What "stateless" really means</a>
+    <a href="#compatibility">6. Modern vs. legacy: the compatibility story</a>
+    <a href="#production">7. Production scenario: the silent version mismatch</a>
+    <a href="#mistakes">8. Common mistakes</a>
+    <a href="#thought-process">9. Builder thought process</a>
+    <a href="#recap">10. Points to remember</a>
+    <a href="#cheat-sheet">11. Cheat sheet</a>
+  </nav>
+
+  <div class="hook" id="hook">
+    <p>
+      In Chapter 4, <code>client.call_tool("save_note", {...})</code>
+      quietly became a request on the wire and came back as a response.
+      That's fine for building — but the moment something goes wrong
+      (a version mismatch, a malformed request, a server that hangs) you
+      need to know what's actually crossing the wire, because the SDK's
+      error messages will reference these exact shapes.
+    </p>
+  </div>
+
+  <section id="three-message-types" class="subtopic">
+    <h2>The Three JSON-RPC Message Types</h2>
+    <p>
+      Every MCP message is one of three JSON-RPC 2.0 shapes. This is the
+      spec's own definition (2026-07-28), not a simplification:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">request</span>
+      </div>
+      <pre><code>{
+  "jsonrpc": "2.0",
+  "id": "string or number, never null",
+  "method": "tools/call",
+  "params": { "...": "..." }
+}</code></pre>
+    </div>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">result response</span>
+      </div>
+      <pre><code>{
+  "jsonrpc": "2.0",
+  "id": "must match the request's id",
+  "result": {
+    "resultType": "complete",
+    "...": "..."
+  }
+}</code></pre>
+    </div>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">notification (one-way, no reply expected)</span>
+      </div>
+      <pre><code>{
+  "jsonrpc": "2.0",
+  "method": "notifications/cancelled",
+  "params": { "...": "..." }
+}</code></pre>
+    </div>
+    <p>
+      The one detail that trips people up who've used JSON-RPC before
+      MCP: every result carries a <code>resultType</code> field.
+      <code>"complete"</code> means the request finished normally;
+      <code>"input_required"</code> means the server needs more
+      information before it can finish — a Multi Round-Trip Request
+      (MRTR), covered briefly below. For backward compatibility, if
+      <code>resultType</code> is missing entirely (a server built on an
+      older spec revision), clients treat that as <code>"complete"</code>.
+    </p>
+  </section>
+
+  <section id="meta" class="subtopic">
+    <h2>Where Protocol Version and Capabilities Actually Live</h2>
+    <p>
+      Chapter 4's test output showed something worth revisiting now:
+      every response carried a field like
+      <code>meta={'io.modelcontextprotocol/serverInfo': {'name': 'notes', ...}}</code>.
+      That wasn't SDK noise — it's the protocol's <code>_meta</code>
+      mechanism, and it's the answer to "if there's no handshake, how do
+      client and server know what version and capabilities they're
+      speaking?"
+    </p>
+    <p>
+      Every client request carries these fields inside
+      <code>params._meta</code>:
+    </p>
+    <table>
+      <thead><tr><th>Key</th><th>Required?</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>io.modelcontextprotocol/protocolVersion</code></td><td>Yes</td><td>e.g. <code>"2026-07-28"</code> — which spec revision this request uses</td></tr>
+        <tr><td><code>io.modelcontextprotocol/clientCapabilities</code></td><td>Yes</td><td>What this client supports, declared fresh on every request</td></tr>
+        <tr><td><code>io.modelcontextprotocol/clientInfo</code></td><td>No</td><td>Client name/version, for logging and debugging only</td></tr>
+      </tbody>
+    </table>
+    <p>
+      And every server response should carry
+      <code>io.modelcontextprotocol/serverInfo</code> — exactly the field
+      you saw in Chapter 4's real test output. The spec is explicit that
+      these <code>*Info</code> fields are self-reported and
+      <strong>must not</strong> be used for security decisions — they're
+      for display and debugging, not authentication.
+    </p>
+  </section>
+
+  <section id="worked-trace" class="subtopic">
+    <h2>A Worked Exchange, Field By Field</h2>
+    <p>
+      Here's a <code>tools/call</code> request against Chapter 4's notes
+      server, constructed from the spec's defined shapes (field names and
+      structure straight from the 2026-07-28 specification), with a
+      request-scoped trace ID attached the way OpenTelemetry propagation
+      works in <code>_meta</code>:
+    </p>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">request: tools/call</span>
+      </div>
+      <pre><code>{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "method": "tools/call",
+  "params": {
+    "name": "save_note",
+    "arguments": { "title": "todo", "body": "buy milk" },
+    "_meta": {
+      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+      "io.modelcontextprotocol/clientCapabilities": {},
+      "traceparent": "00-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7-01"
+    }
+  }
+}</code></pre>
+    </div>
+    <div class="code-window">
+      <div class="code-window-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="filename">response: result</span>
+      </div>
+      <pre><code>{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "result": {
+    "resultType": "complete",
+    "content": [{ "type": "text", "text": "Saved note 'todo' (8 characters)." }],
+    "_meta": {
+      "io.modelcontextprotocol/serverInfo": { "name": "notes", "version": "" }
+    }
+  }
+}</code></pre>
+    </div>
+    <p>
+      Compare this to Chapter 4's Python output —
+      <code>SAVE RESULT: Saved note 'todo' (8 characters).</code> — and
+      you can see the SDK is just unwrapping <code>result.content[0].text</code>
+      for you. Nothing about that call was magic; it was this exact
+      shape, serialized and deserialized on your behalf.
+    </p>
+  </section>
+
+  <section id="statelessness" class="subtopic">
+    <h2>What "Stateless" Really Means</h2>
+    <p>
+      This is the headline change in the 2026-07-28 spec, and it's easy
+      to misread as "there's no connection." There's still a connection
+      (stdio pipe, or an HTTP endpoint) — what's gone is the idea that
+      the connection itself carries meaning. The spec states this
+      precisely: servers <strong>must not</strong> infer context from
+      prior requests on the same connection, and an open stdio process is
+      explicitly <em>not</em> a "conversation" or "session" — a client is
+      free to interleave unrelated requests on the same pipe, and the
+      server can't assume otherwise.
+    </p>
+    <p>
+      Practically: if you need something to persist across multiple
+      requests (a long-running task, a multi-step workflow), the spec's
+      answer is to pass an explicit identifier on each request that
+      references that state server-side — not to rely on the connection
+      remembering anything. This is exactly analogous to how a
+      well-designed REST API doesn't use TCP connection identity to track
+      a user's session; it uses an explicit token.
+    </p>
+  </section>
+
+  <section id="compatibility" class="subtopic">
+    <h2>Modern vs. Legacy: The Compatibility Story</h2>
+    <p>
+      The spec calls 2026-07-28-and-later <strong>modern</strong> (stateless,
+      per-request metadata) and 2025-11-25-and-earlier <strong>legacy</strong>
+      (an <code>initialize</code> handshake opens a session). Most servers
+      you'll encounter in the wild for a while yet were built against the
+      legacy model. The official compatibility matrix:
+    </p>
+    <table>
+      <thead><tr><th>Client</th><th>Server</th><th>Outcome</th></tr></thead>
+      <tbody>
+        <tr><td>Modern</td><td>Modern</td><td>Works. Version mismatches surface as a clean error; client retries with a supported version.</td></tr>
+        <tr><td>Modern</td><td>Legacy</td><td><strong>Fails</strong> — the legacy server has no concept of the modern request shape.</td></tr>
+        <tr><td>Dual-era (supports both)</td><td>Modern</td><td>Works — stays modern.</td></tr>
+        <tr><td>Dual-era</td><td>Legacy</td><td>Works — falls back to <code>initialize</code>.</td></tr>
+        <tr><td>Legacy</td><td>Modern</td><td><strong>Fails</strong> — no fall-forward mechanism for legacy clients.</td></tr>
+        <tr><td>Legacy</td><td>Dual-era</td><td>Works — server serves legacy semantics.</td></tr>
+      </tbody>
+    </table>
+    <p>
+      The important row for you right now, building fresh servers on the
+      current SDK: a <strong>modern client talking to a legacy server
+      fails</strong>, and the failure is not always an obvious error —
+      the spec notes the legacy server "may reject the request... stay
+      silent, or even process an era-ambiguous method under legacy
+      semantics." If a real-world server you connect to seems to hang or
+      behave strangely with no clear error, a version-era mismatch is the
+      first thing worth checking, before assuming your own code is wrong.
+    </p>
+  </section>
+
+  <section id="production" class="subtopic">
+    <h2>Production Scenario: The Silent Version Mismatch</h2>
+    <p>
+      A logistics company's internal coding agent (built on a modern MCP
+      client) was pointed at a partner's warehouse-inventory MCP server,
+      built eighteen months earlier against the legacy spec. The
+      integration "worked" in a quick manual test — the agent successfully
+      listed a few tools — but a specific tool call silently returned no
+      result under certain conditions, with no error surfaced anywhere.
+      The root cause: the legacy server was processing an era-ambiguous
+      method under legacy semantics exactly as the compatibility table
+      warns, and the modern client had no explicit fallback logic to
+      detect this and retry with an <code>initialize</code> handshake.
+      The fix wasn't a code change to either side — it was adding
+      explicit era-detection on the client, per the spec's documented
+      pattern, instead of assuming every server speaks the current spec.
+    </p>
+  </section>
+
+  <section id="mistakes" class="subtopic">
+    <h2>Common Mistakes</h2>
+    <ul>
+      <li>Assuming an open stdio connection implies conversation
+      continuity — the spec explicitly forbids servers from relying on
+      this, and a well-behaved server won't.</li>
+      <li>Treating <code>clientInfo</code>/<code>serverInfo</code> as
+      trustworthy identity for security decisions — they're
+      self-reported and explicitly not meant for that.</li>
+      <li>Not handling a missing <code>resultType</code> — a legacy-era
+      server won't send one; treat absence as <code>"complete"</code>,
+      per the spec's own backward-compatibility rule, rather than
+      treating it as malformed.</li>
+      <li>Assuming a version mismatch always produces a clear, catchable
+      error — against a legacy server it may not, per the compatibility
+      table above.</li>
+    </ul>
+  </section>
+
+  <section id="thought-process" class="subtopic">
+    <h2>Builder Thought Process</h2>
+    <div class="thinking-box">
+      <p><strong>Problem:</strong> the logistics agent's tool calls to
+      the partner's warehouse server intermittently returned nothing,
+      with no visible error.</p>
+      <p><strong>Assumptions going in:</strong> both sides spoke the
+      current MCP spec, since both were described internally as
+      "MCP-compatible."</p>
+      <p><strong>Approach:</strong> captured raw request/response pairs
+      for a failing call and compared them against the spec's documented
+      shapes (the same exercise as this chapter's worked trace above)
+      rather than guessing from symptoms.</p>
+      <p><strong>Validation:</strong> the captured response was missing
+      the modern <code>_meta</code> fields entirely and had a shape
+      consistent with legacy <code>initialize</code>-based sessions — not
+      a malformed modern response, a different protocol era altogether.</p>
+      <p><strong>Observed failure mode:</strong> confirmed against the
+      compatibility matrix — "Modern client, Legacy server" is a
+      documented failure case, not a bug in either implementation.</p>
+      <p><strong>Decision:</strong> added explicit era-detection on the
+      client side (per the spec's stdio probe pattern) rather than
+      assuming all future partner servers would be modern.</p>
+    </div>
+  </section>
+
+  <section id="recap" class="subtopic">
+    <div class="points-to-remember">
+      <h2>Points To Remember</h2>
+      <ul>
+        <li>Every MCP message is a JSON-RPC request, result response, or
+        notification — results carry a <code>resultType</code> field
+        (<code>"complete"</code> or <code>"input_required"</code>).</li>
+        <li>Protocol version and capabilities travel in every request's
+        <code>_meta</code> field, not in a one-time handshake — this is
+        what "stateless" means.</li>
+        <li>An open connection (even stdio) is explicitly not a
+        conversation — servers must not infer context between requests
+        on the same connection.</li>
+        <li>A modern client talking to a legacy (pre-2026-07-28) server
+        fails, sometimes silently — always check version-era mismatch
+        before assuming your own code is broken.</li>
+        <li><code>clientInfo</code>/<code>serverInfo</code> are
+        self-reported, for debugging only — never a security signal.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="cheat-sheet" class="subtopic">
+    <div class="what-is">
+      <span class="label">Cheat sheet</span>
+      <pre><code>Request:   {jsonrpc, id, method, params}
+Result:    {jsonrpc, id, result: {resultType, ...}}
+Error:     {jsonrpc, id?, error: {code, message, data?}}
+Notify:    {jsonrpc, method, params}   (no id, no reply)
+
+_meta (per request, required):
+  io.modelcontextprotocol/protocolVersion
+  io.modelcontextprotocol/clientCapabilities
+
+_meta (per response, recommended):
+  io.modelcontextprotocol/serverInfo
+
+Modern (2026-07-28+): stateless, no handshake
+Legacy (2025-11-25-):  initialize handshake, session-scoped
+Modern client -> Legacy server = FAILS (often silently)</code></pre>
+    </div>
+  </section>
+
+  <div class="what-is">
+    <span class="label">Interview questions (4 levels)</span>
+    See <a href="interview-questions.html">Chapter 3 interview questions</a>.
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../../index.html">&larr; All Chapters</a>
+    <a href="quiz.html">Take the Quiz &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+    <span><a href="https://github.com/technaom/mcp-for-everyone">github.com/technaom/mcp-for-everyone</a></span>
+  </div>
+</footer>
+
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

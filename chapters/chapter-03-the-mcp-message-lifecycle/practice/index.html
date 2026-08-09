@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The MCP Message Lifecycle Practice Bank — MCP for Everyone</title>
+<meta name="description" content="Practice bank for The MCP Message Lifecycle.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-03">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../exercises/index.html">&larr; Back to exercises</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 3 Practice Bank</span>
+    <span class="reading-time">~20 min</span>
+  </div>
+  <h1>Practice Bank: The MCP Message Lifecycle</h1>
+  <p>Wire-level debugging judgment, grounded in the compatibility matrix
+  and stateless-core rules from the lesson.</p>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Debugging</span>
+    <h3>The intermittent 400</h3>
+    <p>A Streamable HTTP-based MCP integration works most of the time but
+    occasionally returns a 400 with no obvious pattern. Given what the
+    lesson says about required <code>_meta</code> fields, what's a
+    plausible cause worth checking before assuming it's a network issue?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Cost</span>
+    <h3>The chatty trace field</h3>
+    <p>A team adds full OpenTelemetry <code>traceparent</code>/<code>tracestate</code>/<code>baggage</code>
+    propagation to every request for observability. What's the trade-off
+    of doing this on every single stateless request, versus a
+    session-based protocol where this might be negotiated once?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Support</span>
+    <h3>The "it worked in testing" ticket</h3>
+    <p>QA tested against a mock server that always returns modern-shaped
+    responses. Production traffic occasionally hits a legacy partner
+    server and behaves differently. What does this suggest about what
+    QA's mock server should have included?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Compliance</span>
+    <h3>The audit log question</h3>
+    <p>An auditor asks whether <code>clientInfo</code> in request
+    <code>_meta</code> can be used to prove which internal team made a
+    given tool call. Using the lesson's explicit warning about
+    self-reported fields, how do you answer, and what would you recommend
+    instead for genuine audit trails?</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Operations</span>
+    <h3>The long-running report</h3>
+    <p>A tool needs to kick off a report that takes 10 minutes to
+    generate. Given that MCP requests are stateless and an open
+    connection isn't a "conversation," sketch (in a sentence or two) how
+    you'd design this without relying on the connection staying open and
+    "remembering" the in-progress report.</p>
+  </div>
+
+  <div class="scenario-card">
+    <span class="scenario-tag">Scenario · Eval</span>
+    <h3>The version-pinned test suite</h3>
+    <p>Your integration test suite only tests against a modern
+    (2026-07-28) mock server. Your org has 6 servers still on the legacy
+    spec. What's missing from your test coverage, and what's one
+    concrete test case you'd add?</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../exercises/index.html">&larr; Exercises</a>
+    <a href="../interview-questions.html">Interview Questions &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>

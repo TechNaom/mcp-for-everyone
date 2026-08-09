@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The MCP Message Lifecycle Exercises — MCP for Everyone</title>
+<meta name="description" content="Hands-on exercises for The MCP Message Lifecycle.">
+<link rel="stylesheet" href="../../../assets/style.css">
+</head>
+<body data-active-chapter="chapter-03">
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../../index.html">All Chapters</a>
+      <a href="../../../docs/curriculum/index.html">Roadmap</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <p><a href="../quiz.html">&larr; Back to the quiz</a></p>
+
+  <div class="page-meta">
+    <span class="chapter-badge">Chapter 3 Exercises</span>
+    <span class="reading-time">~25 min</span>
+  </div>
+  <h1>Exercises: The MCP Message Lifecycle</h1>
+  <p>Trace a real captured exchange by hand — this reuses Chapter 4's
+  notes server, so you're inspecting a system you already understand,
+  from a new angle.</p>
+
+  <div class="what-is">
+    <span class="label">How to run this</span>
+    <pre><code>pip install "mcp[cli]"
+cd chapters/chapter-03-the-mcp-message-lifecycle/exercises
+python starter.py   # fill in TODO 1-2 first</code></pre>
+  </div>
+
+  <div class="download-links">
+    <a href="starter.py">starter.py</a>
+    <a href="solution.py">solution.py (reference)</a>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">1</span> Capture the exchange</h3>
+    <p>Fill in the TODOs and run the script. You should see output like:</p>
+    <pre><code>result_type: complete
+structured_content: {'result': "Saved note 'lifecycle' (20 characters)."}
+meta: {'io.modelcontextprotocol/serverInfo': {'name': 'notes', 'version': ''}}</code></pre>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">2</span> Map it to the spec shape</h3>
+    <p>Using the lesson's worked-trace section, write out (on paper or in
+    a comment) what the actual JSON-RPC result response looked like on
+    the wire for your <code>save_note</code> call — the
+    <code>jsonrpc</code>, <code>id</code>, and <code>result</code> fields,
+    including where <code>resultType</code> and <code>_meta</code> fit.</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">3</span> Find the missing field</h3>
+    <p>The lesson's worked-trace example includes a
+    <code>traceparent</code> field in the request's <code>_meta</code>
+    for OpenTelemetry propagation. Your captured output doesn't show one
+    — why not? (Hint: who is responsible for setting it, and did anything
+    in your script ask for it?)</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">4</span> (Production-gear) Spot a legacy response</h3>
+    <p>Imagine a captured response has no <code>_meta</code> field at
+    all, and no <code>resultType</code>. Based on the lesson, what era
+    does this response most likely come from, and what should a
+    well-behaved modern client do with the missing
+    <code>resultType</code>?</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">5</span> (Production-gear) The notification that expects no reply</h3>
+    <p>Modify your script to call <code>client.list_tools()</code> and
+    inspect what's returned. Is this a request/response pair or a
+    notification? Justify your answer using the definitions from the
+    lesson, not just what "feels right."</p>
+  </div>
+
+  <div class="task-card">
+    <h3><span class="task-num">6</span> (Production-gear) Design a version check</h3>
+    <p>Write pseudocode (not full implementation) for a function
+    <code>detect_server_era(server)</code> that returns
+    <code>"modern"</code> or <code>"legacy"</code>, following the
+    detection pattern described in the lesson's compatibility section.</p>
+  </div>
+
+  <div class="chapter-nav">
+    <a href="../quiz.html">&larr; Back to Quiz</a>
+    <a href="../practice/index.html">Practice Bank &rarr;</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="page">
+    <span>MCP for Everyone — free, visual, engineering-first MCP learning.</span>
+  </div>
+</footer>
+
+<script src="../../../assets/progress.js"></script>
+<script src="../../../assets/chapters-data.js"></script>
+<script src="../../../assets/sidebar.js"></script>
+</body>
+</html>
