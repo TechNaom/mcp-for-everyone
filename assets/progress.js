@@ -4,7 +4,7 @@
   only. A chapter is complete when its quiz reaches a perfect score.
 */
 
-window.RFEProgress = (function () {
+window.MFEProgress = (function () {
   const STORAGE_KEY = "mfe-progress-v1";
 
   function load() {
@@ -51,6 +51,6 @@ window.RFEProgress = (function () {
 })();
 
 document.addEventListener("DOMContentLoaded", function () {
-  if (window.RFEProgress) window.RFEProgress.renderBadges();
+  if (window.MFEProgress) window.MFEProgress.renderBadges();
 });
 

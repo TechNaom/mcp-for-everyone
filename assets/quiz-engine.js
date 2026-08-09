@@ -80,8 +80,8 @@
 
     const perfectScore = total > 0 && correctCount === total;
     if (celebrationEl) celebrationEl.classList.toggle("show", perfectScore);
-    if (perfectScore && window.RFEProgress) {
-      window.RFEProgress.markComplete(document.body.dataset.chapterId);
+    if (perfectScore && window.MFEProgress) {
+      window.MFEProgress.markComplete(document.body.dataset.chapterId);
     }
   }
 

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP for Everyone Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle chapter list" aria-expanded="false">Chapters</button>
+<aside id="chapter-sidebar" class="sidebar" data-root="../../" aria-label="Chapter navigation"></aside>
+<div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+<header class="top-bar">
+  <div class="page">
+    <a href="../../index.html" class="brand">MCP for Everyone</a>
+    <nav>
+      <a href="../../index.html">Home</a>
+      <a href="CURRICULUM_MAP.md">Markdown roadmap</a>
+      <a href="https://github.com/TechNaom/mcp-for-everyone">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <h1>Roadmap</h1>
+  <p class="lede">
+    The course mirrors the Python for Everyone / RAG for Everyone
+    architecture: chapters grouped into modules, each ending with
+    exercises, a practice bank, interview prep, a project, and a builder
+    thought-process journal. Built on the finalized MCP specification
+    <strong>2026-07-28</strong>.
+  </p>
+  <p>
+    <a class="btn-primary" href="../../chapters/chapter-04-your-first-mcp-server/lesson.html">Start with Chapter 4 (live now)</a>
+  </p>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h3>Module 1: Why MCP Exists</h3>
+      <p>The integration problem MCP solves before naming the protocol.</p>
+      <p><strong>Outcome:</strong> explain why bespoke tool integrations don't scale.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Module 2: MCP Core Concepts</h3>
+      <p>Host, client, server, JSON-RPC, stateless request/response, capability negotiation.</p>
+      <p><strong>Outcome:</strong> diagram an MCP interaction end to end.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Module 3: Building MCP Servers</h3>
+      <p>Tools, resources, prompts, and both standard transports with the Python SDK.</p>
+      <p><strong>Outcome:</strong> ship a working server exposing all three primitives.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Module 4: Building Clients & Hosts</h3>
+      <p>Connecting an agent to one or many servers, merging tool catalogs.</p>
+      <p><strong>Outcome:</strong> build a host that talks to multiple servers.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Module 5: Security & Trust Boundaries</h3>
+      <p>Permission scoping, sandboxing, and prompt injection via tool output — this course's core differentiator.</p>
+      <p><strong>Outcome:</strong> scope permissions and defend against untrusted tool results.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Module 6: Production MCP</h3>
+      <p>Testing, debugging, observability, versioning, and spec-compatibility hardening.</p>
+      <p><strong>Outcome:</strong> operate a server that survives production, not just a demo.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Module 7: Architecture & Capstone</h3>
+      <p>Design secure, multi-tenant MCP infrastructure for a regulated enterprise, with full ADRs.</p>
+      <p><strong>Outcome:</strong> think and design like an architect, not just a builder.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Every Chapter Includes</h3>
+      <p>Lesson, quiz, exercises, practice bank, interview prep, project, and a builder thought-process journal — every code example tested against the real SDK.</p>
+      <p><strong>Outcome:</strong> learn like a responsible AI-era builder.</p>
+    </div>
+  </div>
+
+  <h2>Chapter Path</h2>
+  <div class="chapter-grid">
+    <div class="chapter-card"><span class="chapter-card-num">Chapter 1</span><h3>The Integration Problem MCP Solves</h3><p>Why bespoke tool integrations don't scale across many models and many tools.</p></div>
+    <div class="chapter-card"><span class="chapter-card-num">Chapter 2</span><h3>MCP Architecture: Hosts, Clients, Servers</h3><p>The three roles and how they relate.</p></div>
+    <div class="chapter-card"><span class="chapter-card-num">Chapter 3</span><h3>The MCP Message Lifecycle</h3><p>Stateless JSON-RPC, capability negotiation, and the 2026-07-28 vs 2025-11-25 compatibility story.</p></div>
+    <a class="chapter-card" data-chapter-link="chapter-04" href="../../chapters/chapter-04-your-first-mcp-server/lesson.html"><span class="chapter-card-num">Chapter 4 — Live</span><h3>Your First MCP Server</h3><p>Build, run, and test a real MCP server exposing tools and a resource with the Python SDK.</p></a>
+    <div class="chapter-card"><span class="chapter-card-num">Chapter 5</span><h3>Resources & Prompts</h3><p>The other two MCP primitives and when to reach for each.</p></div>
+    <div class="chapter-card"><span class="chapter-card-num">Chapter 6</span><h3>Transports: stdio vs. Streamable HTTP</h3><p>Choosing a transport and the stateful/stateless compatibility story.</p></div>
+    <div class="chapter-card"><span class="chapter-card-num">Chapter 7</span><h3>Building an MCP Client/Host</h3><p>Connect an agent loop to a running server.</p></div>
+    <div class="chapter-card"><span class="chapter-card-num">Chapter 8</span><h3>Connecting Multiple Servers to One Agent</h3><p>Merging tool catalogs and resolving conflicts.</p></div>
+    <div class="chapter-card"><span class="chapter-card-num">Chapter 9</span><h3>Permissions, Scopes & Sandboxing</h3><p>Least privilege for tool access.</p></div>
+    <div class="chapter-card"><span class="chapter-card-num">Chapter 10</span><h3>Prompt Injection & Tool-Output Trust</h3><p>Defending against untrusted tool results.</p></div>
+    <div class="chapter-card"><span class="chapter-card-num">Chapter 11</span><h3>Testing, Debugging & Observability</h3><p>Traces, logs, and realistic failure diagnosis.</p></div>
+    <div class="chapter-card"><span class="chapter-card-num">Chapter 12</span><h3>Versioning, Errors & Production Hardening</h3><p>Spec-version compatibility and graceful degradation.</p></div>
+    <div class="chapter-card"><span class="chapter-card-num">Chapter 13</span><h3>Capstone: Enterprise MCP Platform Architecture</h3><p>Design secure, multi-tenant MCP infrastructure for a regulated enterprise.</p></div>
+  </div>
+
+  <h2>Canonical Source</h2>
+  <p>
+    The editable roadmap lives in
+    <a href="CURRICULUM_MAP.md">CURRICULUM_MAP.md</a>. Keep this page and
+    <code>assets/chapters-data.js</code> aligned as chapters are built.
+  </p>
+</main>
+
+<script src="../../assets/chapters-data.js"></script>
+<script src="../../assets/progress.js"></script>
+<script src="../../assets/sidebar.js"></script>
+</body>
+</html>

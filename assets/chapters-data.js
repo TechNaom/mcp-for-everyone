@@ -1,8 +1,10 @@
 /*
   Single source of truth for the MCP for Everyone chapter roster.
   Mirrors the rag-for-everyone / python-for-everyone pattern: sidebar.js
-  renders navigation from this file, and roadmap pages are kept in sync
-  with it. Only Chapter 4 has content today — see PROJECT_STATE.md.
+  and home.js render navigation from this file. A chapter is "live" iff
+  it has a `path` — omit `path` for chapters that don't exist yet, do not
+  set a placeholder path, or sidebar/home will link to a 404.
+  Only Chapter 4 has content today — see PROJECT_STATE.md.
 */
 
 window.MFE_MODULES = [
@@ -15,9 +17,7 @@ window.MFE_MODULES = [
         id: "chapter-01",
         num: 1,
         title: "The Integration Problem MCP Solves",
-        path: "chapters/chapter-01-the-integration-problem-mcp-solves/lesson.html",
-        description: "Why bespoke tool integrations don't scale across many models and many tools.",
-        status: "planned"
+        description: "Why bespoke tool integrations don't scale across many models and many tools."
       }
     ]
   },
@@ -30,17 +30,13 @@ window.MFE_MODULES = [
         id: "chapter-02",
         num: 2,
         title: "MCP Architecture: Hosts, Clients, Servers",
-        path: "chapters/chapter-02-mcp-architecture-hosts-clients-servers/lesson.html",
-        description: "The three roles and how they relate.",
-        status: "planned"
+        description: "The three roles and how they relate."
       },
       {
         id: "chapter-03",
         num: 3,
         title: "The MCP Message Lifecycle",
-        path: "chapters/chapter-03-the-mcp-message-lifecycle/lesson.html",
-        description: "Stateless JSON-RPC, capability negotiation, and the 2026-07-28 vs 2025-11-25 compatibility story.",
-        status: "planned"
+        description: "Stateless JSON-RPC, capability negotiation, and the 2026-07-28 vs 2025-11-25 compatibility story."
       }
     ]
   },
@@ -55,7 +51,6 @@ window.MFE_MODULES = [
         title: "Your First MCP Server (Tools)",
         path: "chapters/chapter-04-your-first-mcp-server/lesson.html",
         description: "Build, run, and test a real MCP server exposing tools and a resource with the Python SDK.",
-        status: "live",
         subtopics: [
           { id: "hook", title: "The problem: an assistant that can't act" },
           { id: "core-concepts", title: "Tools, resources, and the server object" },
@@ -71,17 +66,13 @@ window.MFE_MODULES = [
         id: "chapter-05",
         num: 5,
         title: "Resources & Prompts",
-        path: "chapters/chapter-05-resources-and-prompts/lesson.html",
-        description: "The other two MCP primitives and when to reach for each.",
-        status: "planned"
+        description: "The other two MCP primitives and when to reach for each."
       },
       {
         id: "chapter-06",
         num: 6,
         title: "Transports: stdio vs. Streamable HTTP",
-        path: "chapters/chapter-06-transports/lesson.html",
-        description: "Choosing a transport and the stateful/stateless compatibility story.",
-        status: "planned"
+        description: "Choosing a transport and the stateful/stateless compatibility story."
       }
     ]
   },
@@ -94,17 +85,13 @@ window.MFE_MODULES = [
         id: "chapter-07",
         num: 7,
         title: "Building an MCP Client/Host",
-        path: "chapters/chapter-07-building-an-mcp-client-host/lesson.html",
-        description: "Connect an agent loop to a running server.",
-        status: "planned"
+        description: "Connect an agent loop to a running server."
       },
       {
         id: "chapter-08",
         num: 8,
         title: "Connecting Multiple Servers to One Agent",
-        path: "chapters/chapter-08-connecting-multiple-servers/lesson.html",
-        description: "Merging tool catalogs and resolving conflicts.",
-        status: "planned"
+        description: "Merging tool catalogs and resolving conflicts."
       }
     ]
   },
@@ -117,17 +104,13 @@ window.MFE_MODULES = [
         id: "chapter-09",
         num: 9,
         title: "Permissions, Scopes & Sandboxing",
-        path: "chapters/chapter-09-permissions-scopes-sandboxing/lesson.html",
-        description: "Least privilege for tool access.",
-        status: "planned"
+        description: "Least privilege for tool access."
       },
       {
         id: "chapter-10",
         num: 10,
         title: "Prompt Injection & Tool-Output Trust",
-        path: "chapters/chapter-10-prompt-injection-and-tool-output-trust/lesson.html",
-        description: "Defending against untrusted tool results.",
-        status: "planned"
+        description: "Defending against untrusted tool results."
       }
     ]
   },
@@ -140,17 +123,13 @@ window.MFE_MODULES = [
         id: "chapter-11",
         num: 11,
         title: "Testing, Debugging & Observability",
-        path: "chapters/chapter-11-testing-debugging-observability/lesson.html",
-        description: "Traces, logs, and realistic failure diagnosis.",
-        status: "planned"
+        description: "Traces, logs, and realistic failure diagnosis."
       },
       {
         id: "chapter-12",
         num: 12,
         title: "Versioning, Errors & Production Hardening",
-        path: "chapters/chapter-12-versioning-errors-production-hardening/lesson.html",
-        description: "Spec-version compatibility and graceful degradation.",
-        status: "planned"
+        description: "Spec-version compatibility and graceful degradation."
       }
     ]
   },
@@ -163,9 +142,7 @@ window.MFE_MODULES = [
         id: "chapter-13",
         num: 13,
         title: "Capstone: Enterprise MCP Platform Architecture",
-        path: "chapters/chapter-13-capstone-enterprise-mcp-platform/lesson.html",
-        description: "Design secure, multi-tenant MCP infrastructure for a regulated enterprise.",
-        status: "planned"
+        description: "Design secure, multi-tenant MCP infrastructure for a regulated enterprise."
       }
     ]
   }

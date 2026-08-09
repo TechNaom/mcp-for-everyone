@@ -11,7 +11,7 @@
   }
 
   function isComplete(chapterId) {
-    return !!(window.RFEProgress && window.RFEProgress.isComplete(chapterId));
+    return !!(window.MFEProgress && window.MFEProgress.isComplete(chapterId));
   }
 
   function buildSidebarHtml(root, activeChapter) {
